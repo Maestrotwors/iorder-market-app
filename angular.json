@@ -1,0 +1,422 @@
+{
+	"$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+	"version": 1,
+	"cli": {
+		"analytics": false,
+		"packageManager": "bun"
+	},
+	"projects": {
+		"shell": {
+			"projectType": "application",
+			"schematics": {
+				"@schematics/angular:component": {
+					"standalone": true,
+					"style": "css"
+				},
+				"@schematics/angular:directive": {
+					"standalone": true
+				},
+				"@schematics/angular:pipe": {
+					"standalone": true
+				}
+			},
+			"root": "frontend/shell",
+			"sourceRoot": "frontend/shell/src",
+			"architect": {
+				"build": {
+					"builder": "@angular-architects/native-federation:build",
+					"options": {},
+					"configurations": {
+						"production": {
+							"target": "shell:esbuild:production"
+						},
+						"development": {
+							"target": "shell:esbuild:development",
+							"dev": true
+						}
+					},
+					"defaultConfiguration": "production"
+				},
+				"serve": {
+					"builder": "@angular-architects/native-federation:build",
+					"options": {
+						"target": "shell:serve-original:development",
+						"rebuildDelay": 500,
+						"dev": true,
+						"cacheExternalArtifacts": false,
+						"port": 0
+					}
+				},
+				"esbuild": {
+					"builder": "@angular/build:application",
+					"options": {
+						"outputPath": "dist/shell",
+						"index": "frontend/shell/src/index.html",
+						"browser": "frontend/shell/src/main.ts",
+						"polyfills": [
+							"es-module-shims"
+						],
+						"tsConfig": "frontend/shell/tsconfig.app.json",
+						"assets": [
+							{
+								"glob": "**/*",
+								"input": "frontend/shell/public"
+							}
+						],
+						"styles": [
+							"frontend/shell/src/styles.css"
+						],
+						"scripts": []
+					},
+					"configurations": {
+						"production": {
+							"budgets": [
+								{
+									"type": "initial",
+									"maximumWarning": "500kB",
+									"maximumError": "1MB"
+								},
+								{
+									"type": "anyComponentStyle",
+									"maximumWarning": "4kB",
+									"maximumError": "8kB"
+								}
+							],
+							"outputHashing": "all"
+						},
+						"development": {
+							"optimization": false,
+							"extractLicenses": false,
+							"sourceMap": true
+						}
+					},
+					"defaultConfiguration": "production"
+				},
+				"serve-original": {
+					"builder": "@angular-devkit/build-angular:dev-server",
+					"configurations": {
+						"production": {
+							"buildTarget": "shell:esbuild:production"
+						},
+						"development": {
+							"buildTarget": "shell:esbuild:development"
+						}
+					},
+					"defaultConfiguration": "development",
+					"options": {
+						"port": 4200
+					}
+				}
+			}
+		},
+		"supplier": {
+			"projectType": "application",
+			"schematics": {
+				"@schematics/angular:component": {
+					"standalone": true,
+					"style": "css"
+				},
+				"@schematics/angular:directive": {
+					"standalone": true
+				},
+				"@schematics/angular:pipe": {
+					"standalone": true
+				}
+			},
+			"root": "frontend/microfrontends/supplier",
+			"sourceRoot": "frontend/microfrontends/supplier/src",
+			"architect": {
+				"build": {
+					"builder": "@angular-architects/native-federation:build",
+					"options": {},
+					"configurations": {
+						"production": {
+							"target": "supplier:esbuild:production"
+						},
+						"development": {
+							"target": "supplier:esbuild:development",
+							"dev": true
+						}
+					},
+					"defaultConfiguration": "production"
+				},
+				"serve": {
+					"builder": "@angular-architects/native-federation:build",
+					"options": {
+						"target": "supplier:serve-original:development",
+						"rebuildDelay": 500,
+						"dev": true,
+						"cacheExternalArtifacts": false,
+						"port": 0
+					}
+				},
+				"esbuild": {
+					"builder": "@angular/build:application",
+					"options": {
+						"outputPath": "dist/supplier",
+						"index": "frontend/microfrontends/supplier/src/index.html",
+						"browser": "frontend/microfrontends/supplier/src/main.ts",
+						"polyfills": [
+							"es-module-shims"
+						],
+						"tsConfig": "frontend/microfrontends/supplier/tsconfig.app.json",
+						"assets": [
+							{
+								"glob": "**/*",
+								"input": "frontend/microfrontends/supplier/public"
+							}
+						],
+						"styles": [
+							"frontend/microfrontends/supplier/src/styles.css"
+						],
+						"scripts": []
+					},
+					"configurations": {
+						"production": {
+							"budgets": [
+								{
+									"type": "initial",
+									"maximumWarning": "500kB",
+									"maximumError": "1MB"
+								},
+								{
+									"type": "anyComponentStyle",
+									"maximumWarning": "4kB",
+									"maximumError": "8kB"
+								}
+							],
+							"outputHashing": "all"
+						},
+						"development": {
+							"optimization": false,
+							"extractLicenses": false,
+							"sourceMap": true
+						}
+					},
+					"defaultConfiguration": "production"
+				},
+				"serve-original": {
+					"builder": "@angular-devkit/build-angular:dev-server",
+					"configurations": {
+						"production": {
+							"buildTarget": "supplier:esbuild:production"
+						},
+						"development": {
+							"buildTarget": "supplier:esbuild:development"
+						}
+					},
+					"defaultConfiguration": "development",
+					"options": {
+						"port": 4202
+					}
+				}
+			}
+		},
+		"admin": {
+			"projectType": "application",
+			"schematics": {
+				"@schematics/angular:component": {
+					"standalone": true,
+					"style": "css"
+				},
+				"@schematics/angular:directive": {
+					"standalone": true
+				},
+				"@schematics/angular:pipe": {
+					"standalone": true
+				}
+			},
+			"root": "frontend/microfrontends/admin",
+			"sourceRoot": "frontend/microfrontends/admin/src",
+			"architect": {
+				"build": {
+					"builder": "@angular-architects/native-federation:build",
+					"options": {},
+					"configurations": {
+						"production": {
+							"target": "admin:esbuild:production"
+						},
+						"development": {
+							"target": "admin:esbuild:development",
+							"dev": true
+						}
+					},
+					"defaultConfiguration": "production"
+				},
+				"serve": {
+					"builder": "@angular-architects/native-federation:build",
+					"options": {
+						"target": "admin:serve-original:development",
+						"rebuildDelay": 500,
+						"dev": true,
+						"cacheExternalArtifacts": false,
+						"port": 0
+					}
+				},
+				"esbuild": {
+					"builder": "@angular/build:application",
+					"options": {
+						"outputPath": "dist/admin",
+						"index": "frontend/microfrontends/admin/src/index.html",
+						"browser": "frontend/microfrontends/admin/src/main.ts",
+						"polyfills": [
+							"es-module-shims"
+						],
+						"tsConfig": "frontend/microfrontends/admin/tsconfig.app.json",
+						"assets": [
+							{
+								"glob": "**/*",
+								"input": "frontend/microfrontends/admin/public"
+							}
+						],
+						"styles": [
+							"frontend/microfrontends/admin/src/styles.css"
+						],
+						"scripts": []
+					},
+					"configurations": {
+						"production": {
+							"budgets": [
+								{
+									"type": "initial",
+									"maximumWarning": "500kB",
+									"maximumError": "1MB"
+								},
+								{
+									"type": "anyComponentStyle",
+									"maximumWarning": "4kB",
+									"maximumError": "8kB"
+								}
+							],
+							"outputHashing": "all"
+						},
+						"development": {
+							"optimization": false,
+							"extractLicenses": false,
+							"sourceMap": true
+						}
+					},
+					"defaultConfiguration": "production"
+				},
+				"serve-original": {
+					"builder": "@angular-devkit/build-angular:dev-server",
+					"configurations": {
+						"production": {
+							"buildTarget": "admin:esbuild:production"
+						},
+						"development": {
+							"buildTarget": "admin:esbuild:development"
+						}
+					},
+					"defaultConfiguration": "development",
+					"options": {
+						"port": 4203
+					}
+				}
+			}
+		},
+		"customer": {
+			"projectType": "application",
+			"schematics": {
+				"@schematics/angular:component": {
+					"standalone": true,
+					"style": "css"
+				},
+				"@schematics/angular:directive": {
+					"standalone": true
+				},
+				"@schematics/angular:pipe": {
+					"standalone": true
+				}
+			},
+			"root": "frontend/microfrontends/customer",
+			"sourceRoot": "frontend/microfrontends/customer/src",
+			"architect": {
+				"build": {
+					"builder": "@angular-architects/native-federation:build",
+					"options": {},
+					"configurations": {
+						"production": {
+							"target": "customer:esbuild:production"
+						},
+						"development": {
+							"target": "customer:esbuild:development",
+							"dev": true
+						}
+					},
+					"defaultConfiguration": "production"
+				},
+				"serve": {
+					"builder": "@angular-architects/native-federation:build",
+					"options": {
+						"target": "customer:serve-original:development",
+						"rebuildDelay": 500,
+						"dev": true,
+						"cacheExternalArtifacts": false,
+						"port": 0
+					}
+				},
+				"esbuild": {
+					"builder": "@angular/build:application",
+					"options": {
+						"outputPath": "dist/buyer",
+						"index": "frontend/microfrontends/customer/src/index.html",
+						"browser": "frontend/microfrontends/customer/src/main.ts",
+						"polyfills": [
+							"es-module-shims"
+						],
+						"tsConfig": "frontend/microfrontends/customer/tsconfig.app.json",
+						"assets": [
+							{
+								"glob": "**/*",
+								"input": "frontend/microfrontends/customer/public"
+							}
+						],
+						"styles": [
+							"frontend/microfrontends/customer/src/styles.css"
+						],
+						"scripts": []
+					},
+					"configurations": {
+						"production": {
+							"budgets": [
+								{
+									"type": "initial",
+									"maximumWarning": "500kB",
+									"maximumError": "1MB"
+								},
+								{
+									"type": "anyComponentStyle",
+									"maximumWarning": "4kB",
+									"maximumError": "8kB"
+								}
+							],
+							"outputHashing": "all"
+						},
+						"development": {
+							"optimization": false,
+							"extractLicenses": false,
+							"sourceMap": true
+						}
+					},
+					"defaultConfiguration": "production"
+				},
+				"serve-original": {
+					"builder": "@angular-devkit/build-angular:dev-server",
+					"configurations": {
+						"production": {
+							"buildTarget": "customer:esbuild:production"
+						},
+						"development": {
+							"buildTarget": "customer:esbuild:development"
+						}
+					},
+					"defaultConfiguration": "development",
+					"options": {
+						"port": 4201
+					}
+				}
+			}
+		}
+	}
+}

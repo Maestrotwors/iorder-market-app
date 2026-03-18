@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build
+dist/
+tmp/
+out-tsc/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# MCP (contains API keys)
+.mcp.json
+
+# Prisma
+database/prisma/*.db
+
+# Nx
+.nx/
+
+# Angular
+.angular/
+
+# Docker
+infrastructure/docker/volumes/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Coverage
+coverage/
