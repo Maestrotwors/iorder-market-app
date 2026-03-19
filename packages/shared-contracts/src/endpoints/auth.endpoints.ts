@@ -1,6 +1,5 @@
-import type { IUser } from '../types/user.types';
-import type { ApiResponse } from '../types/api-response.types';
-import type { LoginDto, RegisterDto, AuthTokens } from '../dto/auth.dto';
+import type { IUser, ApiResponse } from '../types';
+import type { LoginDto, RegisterDto, AuthTokens } from '../schemas';
 
 // POST /api/auth/login
 export interface LoginRequest extends LoginDto {}

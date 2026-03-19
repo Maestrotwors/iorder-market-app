@@ -1,6 +1,5 @@
-import type { IProduct } from '../types/product.types';
-import type { ApiResponse, PaginatedResponse } from '../types/api-response.types';
-import type { CreateProductDto, UpdateProductDto, ProductFilterDto } from '../dto/product.dto';
+import type { IProduct, ApiResponse, PaginatedResponse } from '../types';
+import type { CreateProductDto, UpdateProductDto, ProductFilterDto } from '../schemas';
 
 // GET /api/products
 export interface GetProductsRequest extends ProductFilterDto {}

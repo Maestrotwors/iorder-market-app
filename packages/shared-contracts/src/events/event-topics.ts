@@ -27,4 +27,4 @@ export const EventTopics = {
   CDC_CHANGE: 'cdc.change',
 } as const;
 
-export type EventTopic = typeof EventTopics[keyof typeof EventTopics];
+export type EventTopic = (typeof EventTopics)[keyof typeof EventTopics];

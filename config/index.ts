@@ -28,7 +28,8 @@ export const config = {
   },
 
   database: {
-    url: process.env['DATABASE_URL'] || 'postgresql://iorder:iorder_secret@localhost:5432/iorder_db',
+    url:
+      process.env['DATABASE_URL'] || 'postgresql://iorder:iorder_secret@localhost:5432/iorder_db',
   },
 
   redpanda: {

@@ -1,6 +1,5 @@
-import type { IOrder } from '../types/order.types';
-import type { ApiResponse, PaginatedResponse } from '../types/api-response.types';
-import type { CreateOrderDto, UpdateOrderStatusDto } from '../dto/order.dto';
+import type { IOrder, ApiResponse, PaginatedResponse } from '../types';
+import type { CreateOrderDto, UpdateOrderStatusDto } from '../schemas';
 
 // GET /api/orders
 export interface GetOrdersRequest {

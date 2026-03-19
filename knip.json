@@ -1,0 +1,40 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": ["config/index.ts"],
+      "project": ["config/**/*.ts"],
+      "ignoreDependencies": [
+        "@angular/forms",
+        "@angular/platform-browser-dynamic",
+        "@angular/router",
+        "rxjs",
+        "angular-eslint"
+      ],
+      "ignoreBinaries": ["docker-compose"]
+    },
+    "frontend/web": {
+      "entry": ["src/main.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/shared-contracts": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/shared-logic": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/shared-ui": {
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": ["@iorder/shared-contracts", "@iorder/shared-logic"]
+    },
+    "microservices/api-gateway": {
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": ["@elysiajs/eden"]
+    },
+    "microservices/products-service": {
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": ["@elysiajs/cors", "@prisma/client", "prisma"]
+    }
+  },
+  "exclude": ["enumMembers"]
+}

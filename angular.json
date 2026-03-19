@@ -57,9 +57,7 @@
                 "input": "frontend/web/public"
               }
             ],
-            "styles": [
-              "frontend/web/src/styles.scss"
-            ]
+            "styles": ["frontend/web/src/styles.scss"]
           },
           "configurations": {
             "production": {

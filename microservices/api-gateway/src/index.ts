@@ -7,10 +7,12 @@ import { proxyRoutes } from './routes/proxy';
 const { port } = config.services.apiGateway;
 
 const app = new Elysia()
-  .use(cors({
-    origin: config.cors.origins,
-    credentials: true,
-  }))
+  .use(
+    cors({
+      origin: config.cors.origins,
+      credentials: true,
+    }),
+  )
   .use(healthRoutes)
   .use(proxyRoutes)
   .listen(port);
