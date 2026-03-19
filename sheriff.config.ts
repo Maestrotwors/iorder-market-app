@@ -12,6 +12,7 @@ export const config: SheriffConfig = {
     'packages/shared-ui': ['type:shared-ui'],
     'microservices/api-gateway': ['layer:gateway'],
     'microservices/products-service': ['layer:service'],
+    'microservices/auth-service': ['layer:service'],
   },
   depRules: {
     root: ['type:domain', 'type:shared', 'type:shared-ui', 'noTag'],

@@ -34,6 +34,9 @@
     "microservices/products-service": {
       "project": ["src/**/*.ts"],
       "ignoreDependencies": ["@elysiajs/cors", "@prisma/client", "prisma"]
+    },
+    "microservices/auth-service": {
+      "project": ["src/**/*.ts"]
     }
   },
   "exclude": ["enumMembers"]

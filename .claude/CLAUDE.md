@@ -4,7 +4,7 @@
 Монорепо с микросервисной архитектурой.
 
 ## Стек технологий
-- **Frontend**: Angular 21, standalone components, SCSS
+- **Frontend**: Angular 21, standalone components, SCSS, Signal Forms, NGRX Signal Store
 - **Backend**: ElysiaJS на Bun runtime
 - **Database**: PostgreSQL + Prisma ORM (WAL для CDC)
 - **Message Broker**: RedPanda (Kafka-совместимый)
@@ -43,11 +43,70 @@
 - Компоненты должны использовать `ChangeDetectionStrategy.OnPush` или Signals
 - Для реактивности — Angular Signals (`signal()`, `computed()`, `effect()`)
 
-### Стиль компонентов
-- SCSS для стилей
+### Signal Forms (СТРОГО ОБЯЗАТЕЛЬНО)
+- **НЕ использовать Reactive Forms** (`FormBuilder`, `FormGroup`, `FormControl`) для новых форм
+- Для форм использовать **Angular Signal Forms** (`@angular/forms/signals`)
+- `form()` + `signal()` для модели данных, `[formField]` директива в шаблоне
+- `FormField` импортировать из `@angular/forms/signals`
+
+```typescript
+import { signal } from '@angular/core';
+import { form, FormField } from '@angular/forms/signals';
+
+// В компоненте:
+loginModel = signal({ email: '', password: '' });
+loginForm = form(this.loginModel);
+
+// В шаблоне:
+// <input [formField]="loginForm.email" />
+```
+
+### NGRX Signal Store (СТРОГО ОБЯЗАТЕЛЬНО)
+- **НЕ использовать сервисы с signal()** для хранения состояния приложения
+- Для state management использовать **NGRX Signal Store** (`@ngrx/signals`)
+- `signalStore` + `withState` + `withMethods` + `withComputed`
+- `patchState` для обновления состояния
+- Store предоставлять через `providedIn: 'root'` или через `providers` в роуте
+- **Вся логика и вычисления — в Store** (withMethods, withComputed)
+- Store может вызывать сервисы (HttpClient, AuthService, etc.)
+- **Компоненты НЕ вычисляют** — только передают данные в Store и читают из Store
+
+```typescript
+import { signalStore, withState, withMethods, withComputed, patchState } from '@ngrx/signals';
+import { inject } from '@angular/core';
+
+export const AuthStore = signalStore(
+  { providedIn: 'root' },
+  withState({ user: null as User | null, loading: false }),
+  withComputed((store) => ({
+    isAuthenticated: computed(() => !!store.user()),
+    userRole: computed(() => store.user()?.role ?? null),
+  })),
+  withMethods((store, http = inject(HttpClient)) => ({
+    async login(email: string, password: string) {
+      patchState(store, { loading: true });
+      // ...
+    },
+  })),
+);
+
+// Компонент — максимально простой:
+export class LoginComponent {
+  readonly store = inject(AuthStore);
+  // Никаких вычислений — только вызов store.login() и чтение store.loading()
+}
+```
+
+### Стиль компонентов (СТРОГО ОБЯЗАТЕЛЬНО)
+- **Single-file components** — template, styles, логика в одном `.ts` файле (inline template + inline styles)
+- SCSS для стилей (inline `styles: \`...\``)
 - Standalone components
 - Skip tests при генерации
-- OnPush change detection
+- `ChangeDetectionStrategy.OnPush`
+- Компоненты максимально простые — никакой бизнес-логики, только:
+  - `inject(Store)` — получить store
+  - Чтение данных из store в шаблоне
+  - Вызов методов store при действиях пользователя
 
 ## Запуск
 ```bash
@@ -62,6 +121,7 @@ ng serve web                # Angular dev server
 - `/backend` — ElysiaJS микросервисы на Bun
 - `/database` — Prisma, миграции, PostgreSQL, WAL/CDC
 - `/devops` — Docker, CI/CD, инфраструктура
+- `/tester` — Playwright E2E, Vitest юнит/интеграционные тесты (фронтенд + бэкенд)
 
 ## Sheriff — Module Boundaries
 

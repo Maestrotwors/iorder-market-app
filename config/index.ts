@@ -16,6 +16,10 @@ export const config = {
       port: Number(process.env['PRODUCTS_SERVICE_PORT']) || 3001,
       host: process.env['PRODUCTS_SERVICE_HOST'] || 'localhost',
     },
+    auth: {
+      port: Number(process.env['AUTH_SERVICE_PORT']) || 3002,
+      host: process.env['AUTH_SERVICE_HOST'] || 'localhost',
+    },
   },
 
   apps: {

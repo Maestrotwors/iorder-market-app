@@ -1,19 +1,22 @@
-import type { IUser, ApiResponse } from '../types';
-import type { LoginDto, RegisterDto, AuthTokens } from '../schemas';
+import type { IUser } from '../types';
+import type { LoginDto, RegisterDto } from '../schemas';
 
-// POST /api/auth/login
+// POST /api/auth/sign-in/email
 export interface LoginRequest extends LoginDto {}
-export interface LoginResponse extends ApiResponse<AuthTokens & { user: IUser }> {}
-
-// POST /api/auth/register
-export interface RegisterRequest extends RegisterDto {}
-export interface RegisterResponse extends ApiResponse<{ user: IUser; tokens: AuthTokens }> {}
-
-// POST /api/auth/refresh
-export interface RefreshTokenRequest {
-  refreshToken: string;
+export interface LoginResponse {
+  user: IUser;
+  session: { id: string; token: string; expiresAt: string };
 }
-export interface RefreshTokenResponse extends ApiResponse<AuthTokens> {}
 
-// GET /api/auth/me
-export interface GetMeResponse extends ApiResponse<IUser> {}
+// POST /api/auth/sign-up/email
+export interface RegisterRequest extends RegisterDto {}
+export interface RegisterResponse {
+  user: IUser;
+  session: { id: string; token: string; expiresAt: string };
+}
+
+// GET /api/auth/get-session
+export interface GetSessionResponse {
+  user: IUser;
+  session: { id: string; token: string; expiresAt: string };
+}

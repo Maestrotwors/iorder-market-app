@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { UserRole } from '../enums';
 
 export const LoginSchema = z.object({
   email: z.string().email(),
@@ -7,18 +6,11 @@ export const LoginSchema = z.object({
 });
 
 export const RegisterSchema = z.object({
+  name: z.string().min(1).max(200),
   email: z.string().email(),
   password: z.string().min(8),
-  firstName: z.string().min(1).max(100),
-  lastName: z.string().min(1).max(100),
-  role: z.nativeEnum(UserRole).default(UserRole.CUSTOMER),
+  role: z.enum(['customer', 'supplier', 'admin']).default('customer'),
 });
 
 export type LoginDto = z.infer<typeof LoginSchema>;
 export type RegisterDto = z.infer<typeof RegisterSchema>;
-
-export interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-}

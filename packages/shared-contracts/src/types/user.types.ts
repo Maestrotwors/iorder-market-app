@@ -1,12 +1,10 @@
-import { UserRole } from '../enums';
-
 export interface IUser {
   id: string;
+  name: string;
   email: string;
-  firstName: string;
-  lastName: string;
-  role: UserRole;
-  isActive: boolean;
+  emailVerified: boolean;
+  image: string | null;
+  role: string;
   createdAt: Date;
   updatedAt: Date;
 }
