@@ -31,7 +31,12 @@
     "knip:fix": "knip --fix",
     "check": "bun run format:check && bun run lint && bun run knip",
     "check:fix": "bun run format && bun run lint:fix && bun run knip:fix",
-    "prebuild:web": "bun run check"
+    "prebuild:web": "bun run check",
+    "k8s:deploy": "bash scripts/k8s-deploy.sh",
+    "k8s:pods": "kubectl get pods -o wide",
+    "k8s:logs": "kubectl logs -l app.kubernetes.io/part-of=iorder-market --tail=50",
+    "k8s:forward": "kubectl port-forward svc/iorder-api-gateway 30080:3000",
+    "k8s:stop": "helm uninstall iorder; pkill -f 'port-forward.*iorder' || true"
   },
   "dependencies": {
     "@angular/animations": "^21.2.5",
@@ -42,6 +47,7 @@
     "@angular/platform-browser": "^21.2.5",
     "@angular/platform-browser-dynamic": "^21.2.5",
     "@angular/router": "^21.2.5",
+    "@ngrx/signals": "^21.0.1",
     "rxjs": "^7.8.2",
     "tslib": "^2.8.1"
   },

@@ -13,6 +13,15 @@ const app = new Elysia()
       credentials: true,
     }),
   )
+  .get('/', () => ({
+    name: 'iOrder Market API',
+    version: '0.0.1',
+    endpoints: {
+      health: '/health',
+      products: '/api/products',
+      auth: '/api/auth',
+    },
+  }))
   .use(healthRoutes)
   .use(proxyRoutes)
   .listen(port);

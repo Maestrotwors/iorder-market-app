@@ -6,6 +6,18 @@ const PRODUCTS_URL = serviceUrl('products');
 const AUTH_URL = serviceUrl('auth');
 
 export const proxyRoutes = new Elysia({ prefix: '/api' })
+  // ---- Products Health ----
+  .get('/products/health', async () => {
+    const res = await fetch(`${PRODUCTS_URL}/health`);
+    return res.json();
+  })
+
+  // ---- Auth Health ----
+  .get('/auth/health', async () => {
+    const res = await fetch(`${AUTH_URL}/health`);
+    return res.json();
+  })
+
   // ---- Products ----
   .get('/products', async ({ query }) => {
     const params = new URLSearchParams(query as Record<string, string>);

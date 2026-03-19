@@ -1,39 +1,47 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../../core/services/auth.service';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { RegisterStore } from './register.store';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [RouterLink, FormsModule],
+  providers: [RegisterStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="auth-page">
       <h2>Register</h2>
 
-      @if (errorMessage()) {
-        <p class="error">{{ errorMessage() }}</p>
+      @if (registerStore.error()) {
+        <p class="error">{{ registerStore.error() }}</p>
       }
 
-      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <form (ngSubmit)="onSubmit()">
         <label>
           Name
-          <input type="text" formControlName="name" autocomplete="name" />
+          <input type="text" [(ngModel)]="name" name="name" required autocomplete="name" />
         </label>
 
         <label>
           Email
-          <input type="email" formControlName="email" autocomplete="email" />
+          <input type="email" [(ngModel)]="email" name="email" required autocomplete="email" />
         </label>
 
         <label>
           Password
-          <input type="password" formControlName="password" autocomplete="new-password" />
+          <input
+            type="password"
+            [(ngModel)]="password"
+            name="password"
+            required
+            minlength="8"
+            autocomplete="new-password"
+          />
         </label>
 
-        <button type="submit" [disabled]="form.invalid || loading()">
-          {{ loading() ? 'Creating account...' : 'Register' }}
+        <button type="submit" [disabled]="registerStore.loading()">
+          {{ registerStore.loading() ? 'Creating account...' : 'Register' }}
         </button>
       </form>
 
@@ -96,35 +104,13 @@ import { AuthService } from '../../../core/services/auth.service';
   `,
 })
 export class RegisterComponent {
-  private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
-  private readonly fb = inject(FormBuilder);
-
-  readonly errorMessage = signal('');
-  readonly loading = signal(false);
-
-  readonly form = this.fb.nonNullable.group({
-    name: ['', [Validators.required]],
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]],
-  });
+  readonly registerStore = inject(RegisterStore);
+  name = '';
+  email = '';
+  password = '';
 
   onSubmit(): void {
-    if (this.form.invalid) return;
-
-    const { name, email, password } = this.form.getRawValue();
-    this.loading.set(true);
-    this.errorMessage.set('');
-
-    this.auth.register(name, email, password).subscribe({
-      next: () => {
-        this.loading.set(false);
-        this.router.navigateByUrl('/customer');
-      },
-      error: (err) => {
-        this.loading.set(false);
-        this.errorMessage.set(err.error?.message ?? 'Registration failed. Please try again.');
-      },
-    });
+    if (!this.name || !this.email || !this.password) return;
+    this.registerStore.register(this.name, this.email, this.password);
   }
 }

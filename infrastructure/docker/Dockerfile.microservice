@@ -1,0 +1,48 @@
+# iOrder Market — Shared Dockerfile for all microservices
+# Usage: docker build -f infrastructure/docker/Dockerfile.microservice --build-arg SERVICE=api-gateway -t iorder/api-gateway:latest .
+# Build context must be the monorepo root.
+
+ARG BUN_VERSION=1.1-alpine
+
+# =============================================================================
+# Stage 1 — Install dependencies and prepare runtime
+# =============================================================================
+FROM oven/bun:${BUN_VERSION} AS build
+
+WORKDIR /app
+
+# Copy the entire monorepo (respecting .dockerignore)
+COPY . .
+
+# Install all workspace dependencies
+RUN bun install
+
+# Generate Prisma client (needed by products-service and auth-service)
+RUN bunx prisma generate --schema=database/prisma/schema.prisma || true
+
+# =============================================================================
+# Stage 2 — Release (minimal runtime image)
+# =============================================================================
+FROM oven/bun:${BUN_VERSION} AS release
+
+ARG SERVICE
+ENV SERVICE=${SERVICE}
+
+WORKDIR /app
+
+# Copy the full monorepo with installed deps from build stage
+# (monorepo structure is required because microservices import from ../../../config)
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/config ./config
+COPY --from=build /app/packages ./packages
+COPY --from=build /app/microservices ./microservices
+COPY --from=build /app/database ./database
+COPY --from=build /app/package.json ./
+COPY --from=build /app/tsconfig.base.json ./
+
+USER bun
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-3000}/health || exit 1
+
+ENTRYPOINT ["sh", "-c", "cd /app/microservices/${SERVICE} && bun run src/index.ts"]

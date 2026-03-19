@@ -1,0 +1,39 @@
+# iOrder Market — Frontend (Angular + Nginx)
+# Usage: docker build -f infrastructure/docker/Dockerfile.frontend -t iorder/frontend:latest .
+# Build context must be the monorepo root.
+
+# Stage 1 — Install dependencies (cached unless package.json/bun.lock change)
+FROM oven/bun:1.2-alpine AS deps
+WORKDIR /app
+
+# Copy only root + packages manifests (no microservices — they have heavy backend deps)
+COPY package.json bun.lock ./
+COPY packages/shared-contracts/package.json packages/shared-contracts/
+COPY packages/shared-logic/package.json packages/shared-logic/
+COPY packages/shared-ui/package.json packages/shared-ui/
+
+# Override workspaces to exclude microservices for frontend build
+RUN cat package.json | bun -e 'const p=JSON.parse(await Bun.stdin.text());p.workspaces=["packages/*"];await Bun.write("package.json",JSON.stringify(p,null,2))' && bun install
+
+# Stage 2 — Build Angular (re-runs only when source code changes)
+FROM deps AS build
+WORKDIR /app
+
+COPY tsconfig.base.json angular.json ./
+COPY config/ config/
+COPY packages/ packages/
+COPY frontend/ frontend/
+
+RUN bun run ng build web
+
+# Stage 3 — Nginx
+FROM nginx:alpine AS release
+
+COPY --from=build /app/dist/web/browser /usr/share/nginx/html
+COPY infrastructure/docker/nginx.conf /etc/nginx/templates/default.conf.template
+
+ENV API_GATEWAY_HOST=iorder-api-gateway
+ENV API_GATEWAY_PORT=3000
+ENV NGINX_ENVSUBST_FILTER=API_GATEWAY
+
+EXPOSE 80

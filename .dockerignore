@@ -1,0 +1,41 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+.angular
+
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Docker (keep nginx.conf accessible for frontend build)
+infrastructure/helm
+infrastructure/ci-cd
+
+# Tests
+**/*.spec.ts
+**/*.test.ts
+coverage
+
+# Documentation
+*.md
+LICENSE
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude
+.claude

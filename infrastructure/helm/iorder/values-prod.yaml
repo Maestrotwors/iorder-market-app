@@ -1,0 +1,50 @@
+# iOrder Market — Production Values
+
+global:
+  environment: production
+  namespace: iorder-prod
+
+apiGateway:
+  replicaCount: 1
+  image:
+    pullPolicy: Always
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilization: 70
+
+productsService:
+  replicaCount: 3
+  image:
+    pullPolicy: Always
+  hpa:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+
+authService:
+  replicaCount: 3
+  image:
+    pullPolicy: Always
+  hpa:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+
+postgresql:
+  storage:
+    size: 20Gi
+
+ingress:
+  enabled: true
+  host: api.iorder.market
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+
+pdb:
+  enabled: true
+  productsService:
+    minAvailable: 2
+  authService:
+    minAvailable: 2

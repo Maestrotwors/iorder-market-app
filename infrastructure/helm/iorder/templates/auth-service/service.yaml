@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "iorder.fullname" . }}-auth-service
+  labels:
+    {{- include "iorder.labels" . | nindent 4 }}
+    {{- include "iorder.selectorLabels" (dict "service" "auth-service" "context" .) | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.authService.port }}
+      targetPort: {{ .Values.authService.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "iorder.selectorLabels" (dict "service" "auth-service" "context" .) | nindent 4 }}

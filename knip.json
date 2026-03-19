@@ -9,7 +9,8 @@
         "@angular/platform-browser-dynamic",
         "@angular/router",
         "rxjs",
-        "angular-eslint"
+        "angular-eslint",
+        "@ngrx/signals"
       ],
       "ignoreBinaries": ["docker-compose"]
     },

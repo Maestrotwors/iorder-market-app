@@ -1,6 +1,6 @@
 import { Elysia } from 'elysia';
 
-export const healthRoutes = new Elysia({ prefix: '/health' }).get('/', () => ({
+export const healthRoutes = new Elysia({ prefix: '/api' }).get('/health', () => ({
   status: 'ok',
   service: 'api-gateway',
   timestamp: new Date().toISOString(),

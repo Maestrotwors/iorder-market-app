@@ -1,0 +1,112 @@
+# iOrder Market — Dev / Minikube Values
+
+global:
+  environment: development
+  namespace: iorder
+
+# --- Frontend ---
+frontend:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: iorder/frontend
+    tag: latest
+    pullPolicy: Never
+  serviceType: NodePort
+  nodePort: 30080
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "128Mi"
+
+# --- API Gateway ---
+apiGateway:
+  replicaCount: 2
+  image:
+    repository: iorder/api-gateway
+    tag: latest
+    pullPolicy: Never
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "128Mi"
+  hpa:
+    enabled: false
+
+# --- Products Service ---
+productsService:
+  replicaCount: 3
+  image:
+    repository: iorder/products-service
+    tag: latest
+    pullPolicy: Never
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "128Mi"
+  hpa:
+    enabled: false
+
+# --- Auth Service ---
+authService:
+  replicaCount: 3
+  image:
+    repository: iorder/auth-service
+    tag: latest
+    pullPolicy: Never
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "128Mi"
+  hpa:
+    enabled: false
+
+# --- PostgreSQL (use host Docker container — same data as local) ---
+postgresql:
+  enabled: false
+  externalHost: "host.minikube.internal"
+  port: 5432
+  database: iorder_db
+  username: iorder
+
+# --- RedPanda ---
+redpanda:
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+# --- Secrets ---
+secrets:
+  jwtSecret: "dev-secret-change-in-production"
+  databasePassword: "iorder_secret"
+
+# --- Ingress ---
+ingress:
+  enabled: false
+
+# --- DB Migrate ---
+dbMigrate: false
+
+# --- Network Policies ---
+networkPolicies:
+  enabled: false
+
+# --- PDB ---
+pdb:
+  enabled: false

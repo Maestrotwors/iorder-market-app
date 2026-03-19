@@ -1,0 +1,41 @@
+# iOrder Market — Staging Values
+
+global:
+  environment: staging
+  namespace: iorder-staging
+
+apiGateway:
+  replicaCount: 1
+  image:
+    pullPolicy: Always
+  hpa:
+    enabled: false
+
+productsService:
+  replicaCount: 2
+  image:
+    pullPolicy: Always
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+
+authService:
+  replicaCount: 2
+  image:
+    pullPolicy: Always
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+
+postgresql:
+  storage:
+    size: 5Gi
+
+pdb:
+  enabled: true
+  productsService:
+    minAvailable: 1
+  authService:
+    minAvailable: 1

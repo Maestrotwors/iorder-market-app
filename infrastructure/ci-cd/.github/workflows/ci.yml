@@ -6,21 +6,15 @@ on:
   pull_request:
     branches: [main]
 
-env:
-  NODE_VERSION: '22'
-
 jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-      - run: npm ci
-      - run: npx nx run-many --target=lint --all
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bunx nx run-many --target=lint --all
 
   test:
     name: Test
@@ -41,13 +35,10 @@ jobs:
           --health-retries=5
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-      - run: npm ci
-      - run: npx prisma generate --schema=database/prisma/schema.prisma
-      - run: npx nx run-many --target=test --all
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bunx prisma generate --schema=database/prisma/schema.prisma
+      - run: bunx nx run-many --target=test --all
         env:
           DATABASE_URL: postgresql://iorder:iorder_secret@localhost:5432/iorder_test
 
@@ -57,9 +48,6 @@ jobs:
     needs: [lint, test]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-      - run: npm ci
-      - run: npx nx run-many --target=build --all
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bunx nx run-many --target=build --all

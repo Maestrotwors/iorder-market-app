@@ -1,0 +1,133 @@
+{{- if .Values.networkPolicies.enabled }}
+# ============================================================
+# NetworkPolicy: products-service
+# Allow ingress ONLY from api-gateway pods
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "iorder.fullname" . }}-products-service
+  labels:
+    {{- include "iorder.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "iorder.selectorLabels" (dict "service" "products-service" "context" .) | nindent 6 }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "iorder.selectorLabels" (dict "service" "api-gateway" "context" .) | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.productsService.port }}
+---
+# ============================================================
+# NetworkPolicy: auth-service
+# Allow ingress ONLY from api-gateway pods
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "iorder.fullname" . }}-auth-service
+  labels:
+    {{- include "iorder.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "iorder.selectorLabels" (dict "service" "auth-service" "context" .) | nindent 6 }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "iorder.selectorLabels" (dict "service" "api-gateway" "context" .) | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.authService.port }}
+---
+# ============================================================
+# NetworkPolicy: postgresql
+# Allow ingress ONLY from products-service and auth-service pods
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "iorder.fullname" . }}-postgresql
+  labels:
+    {{- include "iorder.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "iorder.selectorLabels" (dict "service" "postgresql" "context" .) | nindent 6 }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "iorder.selectorLabels" (dict "service" "products-service" "context" .) | nindent 14 }}
+        - podSelector:
+            matchLabels:
+              {{- include "iorder.selectorLabels" (dict "service" "auth-service" "context" .) | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.postgresql.port }}
+---
+# ============================================================
+# NetworkPolicy: redpanda
+# Allow ingress ONLY from microservice pods
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "iorder.fullname" . }}-redpanda
+  labels:
+    {{- include "iorder.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "iorder.selectorLabels" (dict "service" "redpanda" "context" .) | nindent 6 }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "iorder.selectorLabels" (dict "service" "api-gateway" "context" .) | nindent 14 }}
+        - podSelector:
+            matchLabels:
+              {{- include "iorder.selectorLabels" (dict "service" "products-service" "context" .) | nindent 14 }}
+        - podSelector:
+            matchLabels:
+              {{- include "iorder.selectorLabels" (dict "service" "auth-service" "context" .) | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.redpanda.kafka.port }}
+        - protocol: TCP
+          port: {{ .Values.redpanda.schemaRegistry.port }}
+        - protocol: TCP
+          port: {{ .Values.redpanda.restProxy.port }}
+---
+# ============================================================
+# NetworkPolicy: api-gateway
+# Allow ingress from anywhere (entry point exposed via Ingress)
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "iorder.fullname" . }}-api-gateway
+  labels:
+    {{- include "iorder.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "iorder.selectorLabels" (dict "service" "api-gateway" "context" .) | nindent 6 }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - {}
+{{- end }}
