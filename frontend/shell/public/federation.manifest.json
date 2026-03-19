@@ -1,5 +1,0 @@
-{
-	"customer": "http://localhost:4201/remoteEntry.json",
-	"supplier": "http://localhost:4202/remoteEntry.json",
-	"admin": "http://localhost:4203/remoteEntry.json"
-}

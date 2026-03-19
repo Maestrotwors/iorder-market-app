@@ -18,65 +18,23 @@ model User {
   password  String
   firstName String   @map("first_name")
   lastName  String   @map("last_name")
-  role      UserRole @default(BUYER)
+  role      UserRole @default(CUSTOMER)
   isActive  Boolean  @default(true) @map("is_active")
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
-  supplierProfile SupplierProfile?
-  orders          Order[]
-  cart            Cart?
-  notifications   Notification[]
-
   @@map("users")
 }
 
 enum UserRole {
-  BUYER
+  CUSTOMER
   SUPPLIER
   ADMIN
 }
 
-// ==================== Supplier ====================
-
-model SupplierProfile {
-  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId      String  @unique @map("user_id") @db.Uuid
-  companyName String  @map("company_name")
-  description String  @default("")
-  rating      Float   @default(0)
-  isVerified  Boolean @default(false) @map("is_verified")
-
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
-
-  user     User      @relation(fields: [userId], references: [id])
-  products Product[]
-
-  @@map("supplier_profiles")
-}
-
 // ==================== Catalog ====================
-
-model Category {
-  id       String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name     String
-  slug     String  @unique
-  parentId String? @map("parent_id") @db.Uuid
-
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
-
-  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children Category[] @relation("CategoryHierarchy")
-  products Product[]
-
-  @@map("categories")
-}
 
 model Product {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -84,8 +42,6 @@ model Product {
   description String
   price       Decimal  @db.Decimal(10, 2)
   currency    String   @default("USD") @db.VarChar(3)
-  categoryId  String   @map("category_id") @db.Uuid
-  supplierId  String   @map("supplier_id") @db.Uuid
   images      String[] @default([])
   stock       Int      @default(0)
   isActive    Boolean  @default(true) @map("is_active")
@@ -94,164 +50,7 @@ model Product {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
-  category   Category        @relation(fields: [categoryId], references: [id])
-  supplier   SupplierProfile @relation(fields: [supplierId], references: [id])
-  orderItems OrderItem[]
-  cartItems  CartItem[]
-
-  @@index([categoryId])
-  @@index([supplierId])
   @@index([price])
   @@index([isActive])
   @@map("products")
-}
-
-// ==================== Orders ====================
-
-model Order {
-  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  buyerId         String        @map("buyer_id") @db.Uuid
-  status          OrderStatus   @default(PENDING)
-  totalAmount     Decimal       @map("total_amount") @db.Decimal(10, 2)
-  currency        String        @default("USD") @db.VarChar(3)
-  paymentStatus   PaymentStatus @default(PENDING) @map("payment_status")
-
-  // Shipping address (denormalized)
-  shippingStreet     String @map("shipping_street")
-  shippingCity       String @map("shipping_city")
-  shippingState      String @map("shipping_state")
-  shippingPostalCode String @map("shipping_postal_code")
-  shippingCountry    String @map("shipping_country")
-
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
-
-  buyer    User        @relation(fields: [buyerId], references: [id])
-  items    OrderItem[]
-  payments Payment[]
-
-  @@index([buyerId])
-  @@index([status])
-  @@index([createdAt])
-  @@map("orders")
-}
-
-enum OrderStatus {
-  PENDING
-  CONFIRMED
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  CANCELLED
-  REFUNDED
-}
-
-model OrderItem {
-  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orderId     String  @map("order_id") @db.Uuid
-  productId   String  @map("product_id") @db.Uuid
-  productName String  @map("product_name")
-  quantity    Int
-  unitPrice   Decimal @map("unit_price") @db.Decimal(10, 2)
-  totalPrice  Decimal @map("total_price") @db.Decimal(10, 2)
-
-  order   Order   @relation(fields: [orderId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
-
-  @@map("order_items")
-}
-
-// ==================== Cart ====================
-
-model Cart {
-  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId String @unique @map("user_id") @db.Uuid
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  user  User       @relation(fields: [userId], references: [id])
-  items CartItem[]
-
-  @@map("carts")
-}
-
-model CartItem {
-  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  cartId    String  @map("cart_id") @db.Uuid
-  productId String  @map("product_id") @db.Uuid
-  quantity  Int
-  unitPrice Decimal @map("unit_price") @db.Decimal(10, 2)
-
-  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id])
-
-  @@unique([cartId, productId])
-  @@map("cart_items")
-}
-
-// ==================== Payments ====================
-
-model Payment {
-  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orderId       String        @map("order_id") @db.Uuid
-  amount        Decimal       @db.Decimal(10, 2)
-  currency      String        @default("USD") @db.VarChar(3)
-  status        PaymentStatus @default(PENDING)
-  method        String?       @db.VarChar(50)
-  transactionId String?       @map("transaction_id")
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  order Order @relation(fields: [orderId], references: [id])
-
-  @@index([orderId])
-  @@map("payments")
-}
-
-enum PaymentStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
-  REFUNDED
-}
-
-// ==================== Notifications ====================
-
-model Notification {
-  id      String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId  String @map("user_id") @db.Uuid
-  type    String @db.VarChar(50)
-  title   String
-  message String
-  data    Json?
-  isRead  Boolean @default(false) @map("is_read")
-
-  createdAt DateTime @default(now()) @map("created_at")
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@index([userId, isRead])
-  @@index([createdAt])
-  @@map("notifications")
-}
-
-// ==================== Audit Log ====================
-
-model AuditLog {
-  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tableName String @map("table_name") @db.VarChar(100)
-  operation String @db.VarChar(10) // INSERT, UPDATE, DELETE
-  recordId  String @map("record_id") @db.Uuid
-  before    Json?
-  after     Json?
-
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@index([tableName, recordId])
-  @@index([createdAt])
-  @@map("audit_logs")
 }
