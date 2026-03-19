@@ -18,7 +18,12 @@
     "module": "ES2022",
     "lib": ["ES2022", "dom"],
     "useDefineForClassFields": false,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "@iorder/shared-contracts": ["../../packages/shared-contracts/src/index.ts"],
+      "@iorder/shared-logic": ["../../packages/shared-logic/src/index.ts"],
+      "@iorder/shared-ui": ["../../packages/shared-ui/src/index.ts"]
+    }
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

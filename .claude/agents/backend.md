@@ -49,7 +49,42 @@ microservices/<service-name>/
 - Чтение логов контейнеров для отладки
 - Управление Docker Compose стеками
 
-## Контракты
-API контракты определяются в `@iorder/shared-contracts`.
+## Контракты (КРИТИЧЕСКИ ВАЖНО)
+
+API контракты определяются в `@iorder/shared-contracts`. Это общий пакет между frontend и backend.
 Один и тот же тип `IProduct` используется и в ElysiaJS route, и в Angular компоненте.
+
+**Правила:**
+1. **Всегда используй endpoint contracts** из `packages/shared-contracts/src/endpoints/` для типизации route handlers
+2. **Никогда не создавай локальные интерфейсы** для request/response в микросервисах — используй только из shared-contracts
+3. Если добавляешь новый эндпоинт — **сначала добавь контракт** в `packages/shared-contracts/src/endpoints/`, потом используй его в route handler
+4. Zod-схемы из `src/dto/` используются для **валидации** тела запроса в ElysiaJS routes
+5. Типы из `src/endpoints/` используются для **типизации** return types
+
+**Пример использования в бэкенде:**
+```typescript
+import { CreateProductSchema } from '@iorder/shared-contracts';
+import type { GetProductsResponse, CreateProductResponse } from '@iorder/shared-contracts';
+
+.get('/products', ({ query }): GetProductsResponse => {
+  // ...
+})
+.post('/products', ({ body }): CreateProductResponse => {
+  const validated = CreateProductSchema.parse(body);
+  // ...
+})
+```
+
+**Структура shared-contracts:**
+- `src/types/` — базовые интерфейсы (IProduct, IUser, IOrder, etc.)
+- `src/dto/` — Zod-схемы валидации + inferred DTO типы
+- `src/endpoints/` — типизированные request/response для каждого API эндпоинта
+- `src/enums/` — перечисления (UserRole, OrderStatus, etc.)
+- `src/events/` — RedPanda event payloads
+
+**Workflow при изменении API:**
+1. Измени контракт в `packages/shared-contracts/src/endpoints/`
+2. Обнови route handler в микросервисе — TypeScript покажет ошибки
+3. Фронтенд тоже увидит ошибки компиляции и должен будет обновиться
+
 Код и комментарии на английском.

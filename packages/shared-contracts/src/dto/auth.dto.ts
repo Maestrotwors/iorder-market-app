@@ -11,7 +11,7 @@ export const RegisterSchema = z.object({
   password: z.string().min(8),
   firstName: z.string().min(1).max(100),
   lastName: z.string().min(1).max(100),
-  role: z.nativeEnum(UserRole).default(UserRole.BUYER),
+  role: z.nativeEnum(UserRole).default(UserRole.CUSTOMER),
 });
 
 export type LoginDto = z.infer<typeof LoginSchema>;

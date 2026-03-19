@@ -65,17 +65,50 @@ frontend/web/src/
 Для подключения к SSE используй `EventSource` API или кастомный Angular-сервис.
 Запрос отправляется по HTTP, ответ приходит через SSE stream.
 
-## Тестирование через Playwright
+## Браузер и отладка
 
-После внесения изменений во фронтенд проверяй результат через Playwright MCP в **headless-режиме** (без открытия окна браузера).
-- Проверяй, что страница загружается без ошибок в консоли
-- Проверяй, что роутинг работает корректно
+Три MCP-инструмента — каждый для своей задачи, не дублируй:
+
+| Инструмент | Когда использовать |
+|---|---|
+| **Playwright** | Открыть страницу, навигация, клики, проверить что UI работает. Headless по умолчанию, headed если пользователь хочет видеть |
+| **Chrome DevTools** | Отладка: console errors, network requests, performance, DOM inspection |
+| **Browser MCP** | Расширенное взаимодействие с браузером |
+
+**Правила:**
+- После изменений во фронтенде — проверяй через Playwright что страница загружается без ошибок
+- Если пользователь просит «открой в браузере» или «покажи» — используй Playwright в headed-режиме
+- Для отладки проблем (ошибки в console, сетевые запросы) — используй Chrome DevTools
 - Если найдены ошибки — исправь их, не спрашивая пользователя
 - Сообщай пользователю только результат: «ошибок нет» или «исправил X»
 
-## Контракты
+## Контракты (КРИТИЧЕСКИ ВАЖНО)
 
-API контракты берутся из `@iorder/shared-contracts`.
+API контракты берутся из `@iorder/shared-contracts`. Это общий пакет между frontend и backend.
+
+**Правила:**
+1. **Всегда используй endpoint contracts** из `@iorder/shared-contracts` для типизации HTTP-запросов и ответов
+2. **Никогда не создавай локальные интерфейсы** для request/response — используй только из shared-contracts
+3. Если нужен новый эндпоинт — **сначала добавь контракт** в `packages/shared-contracts/src/endpoints/`, потом используй его
+4. Zod-схемы из `src/dto/` используются для валидации на бэкенде, типы из `src/endpoints/` — для типизации на обоих сторонах
+
+**Пример использования во фронтенде:**
+```typescript
+import type { GetProductsResponse, GetProductByIdResponse } from '@iorder/shared-contracts';
+
+products = httpResource<GetProductsResponse>(() => ({
+  url: '/api/products',
+  params: { page: '1', limit: '20' },
+}));
+```
+
+**Структура shared-contracts:**
+- `src/types/` — базовые интерфейсы (IProduct, IUser, IOrder, etc.)
+- `src/dto/` — Zod-схемы валидации + inferred DTO типы
+- `src/endpoints/` — типизированные request/response для каждого API эндпоинта
+- `src/enums/` — перечисления (UserRole, OrderStatus, etc.)
+- `src/events/` — RedPanda event payloads
+
 Код и комментарии на английском.
 
 ---
