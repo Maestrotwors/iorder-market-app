@@ -8,10 +8,11 @@
     "test": "bun test"
   },
   "dependencies": {
-    "elysia": "^1.2.0",
     "@elysiajs/cors": "^1.2.0",
+    "@elysiajs/openapi": "^1.4.14",
+    "@iorder/shared-contracts": "workspace:*",
     "@prisma/client": "^6.0.0",
-    "@iorder/shared-contracts": "workspace:*"
+    "elysia": "^1.2.0"
   },
   "devDependencies": {
     "bun-types": "latest",

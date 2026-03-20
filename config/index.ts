@@ -45,11 +45,16 @@ export const config = {
     expiration: Number(process.env['JWT_EXPIRATION']) || 3600,
   },
 
+  isDev: (process.env['NODE_ENV'] || 'development') !== 'production',
+
   cors: {
     get origins() {
+      const extra = process.env['CORS_ORIGINS']?.split(',') ?? [];
       return [
         `http://localhost:${config.apps.web.port}`,
         `http://localhost:${config.apps.admin.port}`,
+        'http://localhost:30080',
+        ...extra,
       ];
     },
   },

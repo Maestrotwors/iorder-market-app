@@ -1,4 +1,9 @@
 import { Elysia, t } from 'elysia';
+import {
+  ProductFilterSchema,
+  CreateProductSchema,
+  UpdateProductSchema,
+} from '@iorder/shared-contracts';
 import type { IProduct, PaginatedResponse, ApiResponse } from '@iorder/shared-contracts';
 
 // Mock data — will be replaced with Prisma queries
@@ -75,6 +80,12 @@ export const productRoutes = new Elysia({ prefix: '/products' })
         sortBy: t.Optional(t.String()),
         sortOrder: t.Optional(t.String()),
       }),
+      detail: {
+        summary: 'List products',
+        description:
+          'Returns a paginated list of active products. Supports search by name/description, filtering by category, and sorting.',
+        tags: ['Products'],
+      },
     },
   )
   .get(
@@ -93,5 +104,105 @@ export const productRoutes = new Elysia({ prefix: '/products' })
       params: t.Object({
         id: t.String(),
       }),
+      detail: {
+        summary: 'Get product by ID',
+        description: 'Returns a single product by its UUID. Returns null if not found.',
+        tags: ['Products'],
+      },
+    },
+  )
+  .post(
+    '/',
+    ({ body }): ApiResponse<IProduct> => {
+      const product: IProduct = {
+        id: crypto.randomUUID(),
+        ...body,
+        currency: body.currency ?? 'USD',
+        images: body.images ?? [],
+        stock: body.stock ?? 0,
+        supplierId: '550e8400-e29b-41d4-a716-446655440020',
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      mockProducts.push(product);
+
+      return {
+        success: true,
+        data: product,
+        timestamp: new Date().toISOString(),
+      };
+    },
+    {
+      body: CreateProductSchema,
+      detail: {
+        summary: 'Create product',
+        description: 'Creates a new product. Validates input with Zod schema.',
+        tags: ['Products'],
+      },
+    },
+  )
+  .patch(
+    '/:id',
+    ({ params, body }): ApiResponse<IProduct | null> => {
+      const index = mockProducts.findIndex((p) => p.id === params.id);
+      if (index === -1) {
+        return {
+          success: false,
+          data: null,
+          message: 'Product not found',
+          timestamp: new Date().toISOString(),
+        };
+      }
+      mockProducts[index] = { ...mockProducts[index], ...body, updatedAt: new Date() };
+
+      return {
+        success: true,
+        data: mockProducts[index],
+        timestamp: new Date().toISOString(),
+      };
+    },
+    {
+      params: t.Object({
+        id: t.String(),
+      }),
+      body: UpdateProductSchema,
+      detail: {
+        summary: 'Update product',
+        description: 'Partially updates a product by ID. All fields are optional.',
+        tags: ['Products'],
+      },
+    },
+  )
+  .delete(
+    '/:id',
+    ({ params }): ApiResponse<null> => {
+      const index = mockProducts.findIndex((p) => p.id === params.id);
+      if (index === -1) {
+        return {
+          success: false,
+          data: null,
+          message: 'Product not found',
+          timestamp: new Date().toISOString(),
+        };
+      }
+      mockProducts.splice(index, 1);
+
+      return {
+        success: true,
+        data: null,
+        message: 'Product deleted',
+        timestamp: new Date().toISOString(),
+      };
+    },
+    {
+      params: t.Object({
+        id: t.String(),
+      }),
+      detail: {
+        summary: 'Delete product',
+        description: 'Deletes a product by ID.',
+        tags: ['Products'],
+      },
     },
   );

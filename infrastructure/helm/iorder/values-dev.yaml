@@ -65,21 +65,27 @@ authService:
     pullPolicy: Never
   resources:
     requests:
-      cpu: "50m"
-      memory: "64Mi"
-    limits:
-      cpu: "200m"
+      cpu: "100m"
       memory: "128Mi"
+    limits:
+      cpu: "300m"
+      memory: "256Mi"
   hpa:
     enabled: false
 
-# --- PostgreSQL (use host Docker container — same data as local) ---
+# --- PostgreSQL ---
 postgresql:
-  enabled: false
-  externalHost: "host.minikube.internal"
+  enabled: true
   port: 5432
   database: iorder_db
   username: iorder
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "128Mi"
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
 
 # --- RedPanda ---
 redpanda:
@@ -93,7 +99,7 @@ redpanda:
 
 # --- Secrets ---
 secrets:
-  jwtSecret: "dev-secret-change-in-production"
+  jwtSecret: "dev-secret-change-in-production-must-be-32-chars-long!!"
   databasePassword: "iorder_secret"
 
 # --- Ingress ---
