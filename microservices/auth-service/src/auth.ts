@@ -1,5 +1,6 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
+import { jwt } from 'better-auth/plugins';
 import { PrismaClient } from '@prisma/client';
 import { config } from '../../../config';
 
@@ -25,6 +26,7 @@ export const auth = betterAuth({
       },
     },
   },
+  plugins: [jwt()],
   trustedOrigins: config.cors.origins,
   advanced: {
     cookiePrefix: 'iorder',

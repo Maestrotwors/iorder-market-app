@@ -212,17 +212,18 @@ export const AuthStore = signalStore(
 
 ## Принципы проекта iOrder
 
-1. **Standalone components only** — никаких NgModules
-2. **Signals first** — Angular Signals вместо BehaviorSubject
-3. **New control flow** — `@if`, `@for`, `@switch`, `@defer`
-4. **Zoneless** — zoneless change detection
-5. **Single-file components** — inline template + inline styles
-6. **NgRx Signal Store** — для всего state management
-7. **Signal Forms** — для всех новых форм
-8. **Shared-first** — компоненты для mobile выноси в `shared-ui`
-9. **Бизнес-логика в shared-logic** — не дублируй между web и mobile
-10. **Type-safe contracts** — типы из `@iorder/shared-contracts`
-11. **Change Detection OnPush** — во всех компонентах
+1. **Feature-Sliced Design** — `pages → widgets → features → entities → shared`
+2. **Standalone components only** — никаких NgModules
+3. **Signals first** — Angular Signals вместо BehaviorSubject
+4. **New control flow** — `@if`, `@for`, `@switch`, `@defer`
+5. **Zoneless** — zoneless change detection
+6. **Single-file components** — inline template + inline styles
+7. **NgRx Signal Store** — для всего state management, stores живут в `features/`
+8. **Signal Forms** — для всех новых форм
+9. **Shared-first** — компоненты для mobile выноси в `@iorder/shared-ui`
+10. **Бизнес-логика в shared-logic** — не дублируй между web и mobile
+11. **Type-safe contracts** — типы из `@iorder/shared-contracts`
+12. **Change Detection OnPush** — во всех компонентах
 
 ## MCP Tools (Angular CLI)
 
@@ -231,18 +232,98 @@ export const AuthStore = signalStore(
 - `get_best_practices` — лучшие практики по конкретной теме
 - `find_examples` — поиск примеров кода
 
-## Структура приложения
+## Структура приложения — Feature-Sliced Design (FSD)
 
 ```
-frontend/web/src/
-├── app/
-│   ├── core/           # Сервисы, guards, interceptors
-│   ├── domains/        # Feature-домены (customer, supplier, admin, landing)
-│   ├── layouts/        # Layout-компоненты
-│   └── app.config.ts   # Standalone app config (zoneless)
-├── assets/
-└── main.ts
+frontend/web/src/app/
+├── pages/                    # Страницы (композиция из widgets/features)
+│   ├── landing/              # Лендинг + home page
+│   ├── customer/             # Кабинет покупателя
+│   ├── supplier/             # Кабинет поставщика
+│   └── admin/                # Панель администратора
+│
+├── widgets/                  # Составные UI-блоки из нескольких features/entities
+│
+├── features/                 # Действия пользователя + store
+│   └── auth/
+│       ├── login/            # login.component.ts + login.store.ts
+│       └── register/         # register.component.ts + register.store.ts
+│
+├── entities/                 # Бизнес-сущности
+│   ├── user/model/           # user.types.ts
+│   ├── product/model/        # product.types.ts
+│   └── order/model/          # order.types.ts
+│
+├── shared/                   # Local shared (guards, API, types, schemas)
+│   ├── api/                  # auth.service.ts
+│   ├── guards/               # auth.guard.ts (roleGuard)
+│   ├── store/                # app.store.ts (global app state)
+│   ├── schemas/              # Frontend-only Zod schemas
+│   └── types/                # auth.types.ts
+│
+├── app.config.ts
+├── app.routes.ts
+└── app.ts
 ```
+
+### Правило зависимостей (СТРОГО)
+
+```
+pages → widgets → features → entities → shared → @iorder/*
+```
+
+Каждый слой импортирует **только нижестоящие**. Контролируется Sheriff.
+
+### Где что размещать:
+
+| Что | Слой | Пример |
+|-----|------|--------|
+| Страница с роутингом | `pages/` | `pages/customer/customer.component.ts` |
+| Составной блок из features | `widgets/` | `widgets/product-card/` |
+| Действие + store | `features/` | `features/auth/login/login.store.ts` |
+| Модель сущности, API, мини-UI | `entities/` | `entities/product/model/` |
+| Guards, http wrapper, types | `shared/` | `shared/guards/auth.guard.ts` |
+
+## Zod-схемы — два уровня
+
+### 1. Общие схемы (backend + frontend): `@iorder/shared-contracts`
+
+- Путь: `packages/shared-contracts/src/schemas/`
+- Импорт: `import { LoginSchema } from '@iorder/shared-contracts';`
+- Содержат: валидации для API request/response (auth, product, order)
+- Используются: и в ElysiaJS backend, и в Angular frontend
+
+### 2. Frontend-only схемы: `shared/schemas/`
+
+- Путь: `frontend/web/src/app/shared/schemas/`
+- Содержат: UI-специфичные валидации, которые **не нужны backend**
+- Примеры: валидация формы поиска, фильтров каталога, настроек UI, step-wizard форм
+- Могут использовать и расширять shared-схемы через `.extend()` / `.merge()`
+
+**Правило:** Если валидация нужна и backend, и frontend — помести в `@iorder/shared-contracts`. Если только frontend — в `shared/schemas/`.
+
+## Shared UI компоненты: `@iorder/shared-ui`
+
+Библиотека переиспользуемых UI компонентов для web и будущего мобильного приложения (Ionic).
+
+- Путь: `packages/shared-ui/src/components/`
+- Импорт: `import { UiInputComponent, UiButtonComponent } from '@iorder/shared-ui';`
+- Каждый компонент в своей папке: `components/input/`, `components/button/`
+- Стилизация через CSS custom properties (`--ui-primary-color`, `--ui-border-radius`, etc.) — позволяет темизацию
+
+### Доступные компоненты:
+
+| Компонент | Селектор | Описание |
+|-----------|----------|----------|
+| `UiInputComponent` | `<ui-input>` | Text input с label, error, placeholder |
+| `UiButtonComponent` | `<ui-button>` | Button с вариантами (primary, secondary, outline, ghost, danger), размерами и loading state |
+
+### Правила для shared-ui:
+
+1. Компоненты должны быть framework-agnostic настолько, насколько возможно (для совместимости с Ionic)
+2. Стилизация — только через CSS custom properties (для темизации web/mobile)
+3. Никаких зависимостей от доменной логики — только UI
+4. Sheriff tag: `type:shared-ui` — все FSD слои могут импортировать, но shared-ui не может импортировать FSD слои
 
 ## Роуты
 

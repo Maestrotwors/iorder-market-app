@@ -39,7 +39,7 @@ import { LoginStore } from './login.store';
         </button>
       </form>
 
-      <p class="auth-link">Don't have an account333? <a routerLink="/register">Register</a></p>
+      <p class="auth-link">Don't have an account? <a routerLink="/register">Register</a></p>
     </section>
   `,
   styles: `

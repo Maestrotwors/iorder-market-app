@@ -1,59 +1,81 @@
 /**
  * iOrder Market — Central Configuration
  *
- * Single source of truth for ports, URLs, and service settings.
- * All microservices and apps import from here.
- * Values can be overridden via environment variables (K8s, Docker, .env).
+ * Single source of truth: config/ports.json
+ * All ports, hosts, DB settings, and infrastructure config live there.
+ *
+ * Host resolution:
+ *   - Local dev:    localhost (default)
+ *   - Docker:       service name from ports.json (via env RUNTIME=docker)
+ *   - Kubernetes:   service name from ports.json (via env from ConfigMap)
  */
+
+import ports from './ports.json';
+
+const env = (key: string) => process.env[key];
+const envNum = (key: string) => (env(key) ? Number(env(key)) : undefined);
+
+/** In Docker/K8s, use service names. Locally, use localhost. */
+const isContainerized = !!env('KUBERNETES_SERVICE_HOST') || env('RUNTIME') === 'docker';
+const defaultHost = (serviceHost: string) => (isContainerized ? serviceHost : 'localhost');
 
 export const config = {
   services: {
     apiGateway: {
-      port: Number(process.env['API_GATEWAY_PORT']) || 3000,
-      host: process.env['API_GATEWAY_HOST'] || 'localhost',
+      port: envNum('API_GATEWAY_PORT') ?? ports.services.apiGateway.port,
+      host: env('API_GATEWAY_HOST') ?? defaultHost(ports.services.apiGateway.host),
     },
     products: {
-      port: Number(process.env['PRODUCTS_SERVICE_PORT']) || 3001,
-      host: process.env['PRODUCTS_SERVICE_HOST'] || 'localhost',
+      port: envNum('PRODUCTS_SERVICE_PORT') ?? ports.services.products.port,
+      host: env('PRODUCTS_SERVICE_HOST') ?? defaultHost(ports.services.products.host),
     },
     auth: {
-      port: Number(process.env['AUTH_SERVICE_PORT']) || 3002,
-      host: process.env['AUTH_SERVICE_HOST'] || 'localhost',
+      port: envNum('AUTH_SERVICE_PORT') ?? ports.services.auth.port,
+      host: env('AUTH_SERVICE_HOST') ?? defaultHost(ports.services.auth.host),
     },
   },
 
   apps: {
-    web: {
-      port: Number(process.env['WEB_PORT']) || 4200,
-    },
-    admin: {
-      port: Number(process.env['ADMIN_PORT']) || 4201,
-    },
+    web: { port: envNum('WEB_PORT') ?? ports.apps.web.port },
+    admin: { port: envNum('ADMIN_PORT') ?? ports.apps.admin.port },
   },
 
   database: {
-    url:
-      process.env['DATABASE_URL'] || 'postgresql://iorder:iorder_secret@localhost:5432/iorder_db',
+    host: env('DATABASE_HOST') ?? defaultHost(ports.infrastructure.postgresql.host),
+    port: envNum('DATABASE_PORT') ?? ports.infrastructure.postgresql.port,
+    name: env('DATABASE_NAME') ?? ports.infrastructure.postgresql.database,
+    username: env('DATABASE_USERNAME') ?? ports.infrastructure.postgresql.username,
+    password: env('DATABASE_PASSWORD') ?? ports.infrastructure.postgresql.password,
+    get url() {
+      return (
+        env('DATABASE_URL') ??
+        `postgresql://${this.username}:${this.password}@${this.host}:${this.port}/${this.name}`
+      );
+    },
   },
 
   redpanda: {
-    brokers: (process.env['REDPANDA_BROKERS'] || 'localhost:19092').split(','),
+    host: env('REDPANDA_HOST') ?? defaultHost(ports.infrastructure.redpanda.host),
+    brokers: (
+      env('REDPANDA_BROKERS') ??
+      `${defaultHost(ports.infrastructure.redpanda.host)}:${ports.infrastructure.redpanda.kafka}`
+    ).split(','),
   },
 
   jwt: {
-    secret: process.env['JWT_SECRET'] || 'dev-secret-change-in-production',
-    expiration: Number(process.env['JWT_EXPIRATION']) || 3600,
+    secret: env('JWT_SECRET') ?? 'dev-secret-change-in-production',
+    expiration: envNum('JWT_EXPIRATION') ?? 3600,
   },
 
-  isDev: (process.env['NODE_ENV'] || 'development') !== 'production',
+  isDev: (env('NODE_ENV') ?? 'development') !== 'production',
 
   cors: {
     get origins() {
-      const extra = process.env['CORS_ORIGINS']?.split(',') ?? [];
+      const extra = env('CORS_ORIGINS')?.split(',') ?? [];
       return [
         `http://localhost:${config.apps.web.port}`,
         `http://localhost:${config.apps.admin.port}`,
-        'http://localhost:30080',
+        `http://localhost:${ports.kubernetes.frontendNodePort}`,
         ...extra,
       ];
     },
@@ -65,3 +87,6 @@ export function serviceUrl(service: keyof typeof config.services): string {
   const { host, port } = config.services[service];
   return `http://${host}:${port}`;
 }
+
+/** Re-export ports.json for scripts that need raw values */
+export { ports };

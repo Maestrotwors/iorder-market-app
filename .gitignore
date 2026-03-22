@@ -18,10 +18,15 @@ out-tsc/
 .DS_Store
 Thumbs.db
 
-# Environment
+# Environment (generated from config/ports.json)
 .env
+.env.db
+.env.docker
 .env.local
 .env.*.local
+
+# Generated Helm values
+infrastructure/helm/iorder/values-ports.yaml
 
 # MCP (contains API keys)
 .mcp.json

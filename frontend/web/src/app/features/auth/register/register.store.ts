@@ -1,26 +1,20 @@
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { signalStore, withState, withMethods, patchState } from '@ngrx/signals';
-import { AuthService } from '../../../core/services/auth.service';
-import { AppStore } from '../../../core/store/app.store';
+import { AuthService } from '../../../shared/api/auth.service';
+import { AppStore } from '../../../shared/store/app.store';
 
-export interface LoginState {
+export interface RegisterState {
   loading: boolean;
   error: string;
 }
 
-const initialState: LoginState = {
+const initialState: RegisterState = {
   loading: false,
   error: '',
 };
 
-const ROLE_ROUTE_MAP: Record<string, string> = {
-  customer: '/customer',
-  supplier: '/supplier',
-  admin: '/admin',
-};
-
-export const LoginStore = signalStore(
+export const RegisterStore = signalStore(
   withState(initialState),
   withMethods(
     (
@@ -29,19 +23,19 @@ export const LoginStore = signalStore(
       appStore = inject(AppStore),
       router = inject(Router),
     ) => ({
-      login(email: string, password: string): void {
+      register(name: string, email: string, password: string): void {
         patchState(store, { loading: true, error: '' });
 
-        authService.login(email, password).subscribe({
+        authService.register(name, email, password).subscribe({
           next: (res) => {
             patchState(store, { loading: false });
             appStore.setUser(res.user);
-            router.navigateByUrl(ROLE_ROUTE_MAP[res.user.role] ?? '/customer');
+            router.navigateByUrl('/customer');
           },
           error: (err) => {
             patchState(store, {
               loading: false,
-              error: err.error?.message ?? 'Login failed. Please try again.',
+              error: err.error?.message ?? 'Registration failed. Please try again.',
             });
           },
         });

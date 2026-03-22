@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { AppStore } from './core/store/app.store';
+import { AppStore } from './shared/store/app.store';
 
 @Component({
   selector: 'app-root',

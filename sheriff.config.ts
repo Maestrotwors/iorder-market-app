@@ -3,29 +3,42 @@ import { SheriffConfig } from '@softarc/sheriff-core';
 export const config: SheriffConfig = {
   enableBarrelLess: true,
   modules: {
-    'frontend/web/src/app/domains/landing': ['domain:landing', 'type:domain'],
-    'frontend/web/src/app/domains/customer': ['domain:customer', 'type:domain'],
-    'frontend/web/src/app/domains/supplier': ['domain:supplier', 'type:domain'],
-    'frontend/web/src/app/domains/admin': ['domain:admin', 'type:domain'],
+    // FSD layers — frontend
+    'frontend/web/src/app/pages/landing': ['layer:page', 'page:landing'],
+    'frontend/web/src/app/pages/customer': ['layer:page', 'page:customer'],
+    'frontend/web/src/app/pages/supplier': ['layer:page', 'page:supplier'],
+    'frontend/web/src/app/pages/admin': ['layer:page', 'page:admin'],
+    'frontend/web/src/app/widgets': ['layer:widget'],
+    'frontend/web/src/app/features': ['layer:feature'],
+    'frontend/web/src/app/entities': ['layer:entity'],
+    'frontend/web/src/app/shared': ['layer:shared-local'],
+
+    // Shared packages
     'packages/shared-contracts': ['type:shared'],
     'packages/shared-logic': ['type:shared'],
     'packages/shared-ui': ['type:shared-ui'],
+
+    // Microservices
     'microservices/api-gateway': ['layer:gateway'],
     'microservices/products-service': ['layer:service'],
     'microservices/auth-service': ['layer:service'],
   },
   depRules: {
-    root: ['type:domain', 'type:shared', 'type:shared-ui', 'noTag'],
+    root: ['layer:page', 'layer:widget', 'layer:feature', 'layer:entity', 'layer:shared-local', 'type:shared', 'type:shared-ui', 'noTag'],
     noTag: ['noTag', 'type:shared'],
 
-    // Each domain can only depend on itself and shared packages
-    'domain:*': ['domain:$*', 'type:shared', 'type:shared-ui'],
+    // FSD: each layer can only import lower layers (top → bottom)
+    'layer:page': ['layer:widget', 'layer:feature', 'layer:entity', 'layer:shared-local', 'type:shared', 'type:shared-ui'],
+    'layer:widget': ['layer:feature', 'layer:entity', 'layer:shared-local', 'type:shared', 'type:shared-ui'],
+    'layer:feature': ['layer:entity', 'layer:shared-local', 'type:shared', 'type:shared-ui'],
+    'layer:entity': ['layer:shared-local', 'type:shared', 'type:shared-ui'],
+    'layer:shared-local': ['type:shared', 'type:shared-ui'],
 
-    // Shared packages don't depend on domains
+    // Shared packages don't depend on frontend layers
     'type:shared': 'type:shared',
     'type:shared-ui': ['type:shared', 'type:shared-ui'],
 
-    // Gateway can use services and shared, services only use shared
+    // Microservices
     'layer:gateway': ['layer:service', 'type:shared'],
     'layer:service': 'type:shared',
   },

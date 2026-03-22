@@ -1,6 +1,6 @@
 import { computed, inject } from '@angular/core';
 import { signalStore, withState, withComputed, withMethods, patchState } from '@ngrx/signals';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '../api/auth.service';
 import { BetterAuthUser } from '../types/auth.types';
 
 export interface AppState {
@@ -40,7 +40,7 @@ export const AppStore = signalStore(
       });
     },
     setUser(user: BetterAuthUser): void {
-      patchState(store, { user });
+      patchState(store, { user, initialized: true });
     },
     clearUser(): void {
       patchState(store, { user: null });

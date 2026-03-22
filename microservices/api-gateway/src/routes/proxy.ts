@@ -1,25 +1,40 @@
 import { Elysia } from 'elysia';
 import { serviceUrl } from '../../../../config';
+import { authMiddleware, type AuthUser } from '../middleware/auth';
 
 const PRODUCTS_URL = serviceUrl('products');
 const AUTH_URL = serviceUrl('auth');
 
 /**
  * Generic passthrough proxy — forwards request as-is to the target service.
- * API Gateway only checks auth (via middleware), never validates request body.
- * Validation is the responsibility of each microservice.
+ * For authenticated routes, injects X-User-* headers so microservices
+ * can identify the caller without their own auth logic.
+ *
+ * @param stripApi - if true, strips /api prefix (default: true).
+ *   Set to false for services that expect /api/* paths (e.g. Better Auth with basePath: '/api/auth').
  */
-function proxyPass(targetBaseUrl: string) {
-  return async ({ request }: { request: Request }) => {
+function proxyPass(targetBaseUrl: string, { stripApi = true } = {}) {
+  return async ({ request, user }: { request: Request; user?: AuthUser }) => {
     const url = new URL(request.url);
-    // Strip /api prefix: /api/products/123 -> /products/123
-    const path = url.pathname.replace(/^\/api/, '');
+    const path = stripApi ? url.pathname.replace(/^\/api/, '') : url.pathname;
     const targetUrl = `${targetBaseUrl}${path}${url.search}`;
     const hasBody = request.method !== 'GET' && request.method !== 'HEAD';
 
+    const headers = new Headers(request.headers);
+
+    // Forward authenticated user info via trusted headers
+    if (user) {
+      headers.set('X-User-Id', user.id);
+      headers.set('X-User-Email', user.email);
+      headers.set('X-User-Role', user.role);
+    }
+
+    // Strip auth headers — microservices trust X-User-* from gateway only
+    headers.delete('authorization');
+
     const res = await fetch(targetUrl, {
       method: request.method,
-      headers: request.headers,
+      headers,
       body: hasBody ? request.body : undefined,
       duplex: 'half',
     });
@@ -32,28 +47,33 @@ function proxyPass(targetBaseUrl: string) {
 }
 
 export const proxyRoutes = new Elysia({ prefix: '/api' })
-  // ---- Auth — public, no auth check (login/signup/session) ----
-  .all('/auth/*', proxyPass(AUTH_URL), {
+  .use(authMiddleware)
+
+  // ---- Auth — public, no auth check (login/signup/session/token) ----
+  .all('/auth/*', proxyPass(AUTH_URL, { stripApi: false }), {
     detail: {
       summary: 'Auth proxy (public)',
-      description: 'Proxies all auth requests to Better Auth service. No auth check required.',
+      description:
+        'Proxies all auth requests to Better Auth service including /api/auth/token for JWT. No auth check required.',
       tags: ['Auth'],
     },
   })
 
-  // ---- Products — proxy everything to products-service ----
+  // ---- Products — protected, requires valid JWT ----
   .all('/products/*', proxyPass(PRODUCTS_URL), {
+    auth: true,
     detail: {
-      summary: 'Products proxy',
+      summary: 'Products proxy (protected)',
       description:
-        'Proxies all /api/products/* requests to products-service. Validation happens in the microservice.',
+        'Proxies all /api/products/* requests to products-service. Requires valid JWT in Authorization header.',
       tags: ['Products'],
     },
   })
   .get('/products', proxyPass(PRODUCTS_URL), {
+    auth: true,
     detail: {
-      summary: 'Products list proxy',
-      description: 'Proxies GET /api/products to products-service.',
+      summary: 'Products list proxy (protected)',
+      description: 'Proxies GET /api/products to products-service. Requires valid JWT.',
       tags: ['Products'],
     },
   });

@@ -1,0 +1,33 @@
+{
+  "services": {
+    "apiGateway": { "host": "api-gateway", "port": 3000 },
+    "products": { "host": "products-service", "port": 3001 },
+    "auth": { "host": "auth-service", "port": 3002 }
+  },
+  "apps": {
+    "web": { "port": 4200 },
+    "admin": { "port": 4201 }
+  },
+  "infrastructure": {
+    "postgresql": {
+      "host": "postgres",
+      "port": 5432,
+      "database": "iorder_db",
+      "username": "iorder",
+      "password": "iorder_secret"
+    },
+    "redpanda": {
+      "host": "redpanda",
+      "kafka": 19092,
+      "schemaRegistry": 18081,
+      "restProxy": 18082
+    },
+    "redpandaConsole": {
+      "host": "redpanda-console",
+      "port": 8080
+    }
+  },
+  "kubernetes": {
+    "frontendNodePort": 30080
+  }
+}

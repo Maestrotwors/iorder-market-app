@@ -13,10 +13,38 @@
 ## Структура проекта
 - `frontend/web/`                       — Angular приложение, порт 4200
 - `microservices/`                      — ElysiaJS сервисы на Bun
-- `packages/`                           — общие пакеты (contracts, logic, UI)
+- `packages/shared-contracts/`          — API типы, Zod-схемы, эндпоинты (backend + frontend)
+- `packages/shared-logic/`             — бизнес-логика, общая для web и mobile
+- `packages/shared-ui/`               — UI компоненты (input, button, etc.) для web и mobile
 - `database/`                           — Prisma schema и миграции
 - `infrastructure/`                     — Docker, CI/CD, RedPanda
 - `config/`                             — центральный конфиг портов (config/index.ts)
+
+## Frontend — Feature-Sliced Design (FSD)
+
+Фронтенд использует слоёную архитектуру Feature-Sliced Design. Зависимости — строго сверху вниз.
+
+```
+frontend/web/src/app/
+├── pages/          # Страницы (композиция из widgets/features)
+├── widgets/        # Составные UI-блоки из нескольких features/entities
+├── features/       # Действия пользователя + store
+├── entities/       # Бизнес-сущности (product, user, order)
+└── shared/         # Guards, API, types, schemas (local shared)
+```
+
+**Правило зависимостей:** `pages → widgets → features → entities → shared → @iorder/*`
+
+## Zod-схемы (валидации)
+
+- **Общие** (backend + frontend): `packages/shared-contracts/src/schemas/` → `@iorder/shared-contracts`
+- **Frontend-only**: `frontend/web/src/app/shared/schemas/` — UI-специфичные валидации
+
+## Shared UI компоненты
+
+- Путь: `packages/shared-ui/src/components/` → `@iorder/shared-ui`
+- Каждый компонент в своей папке: `components/input/`, `components/button/`
+- Стилизация через CSS custom properties для темизации (web/mobile)
 
 ## Роуты фронтенда
 - `/` — лендинг (неавторизованный пользователь)
@@ -133,31 +161,31 @@ bun add -D @softarc/sheriff-core @softarc/eslint-plugin-sheriff
 bunx sheriff init  # создаёт sheriff.config.ts в корне
 ```
 
-### Конфигурация (`sheriff.config.ts`)
+### Конфигурация (`sheriff.config.ts`) — FSD layers
 ```typescript
-import { SheriffConfig } from '@softarc/sheriff-core';
-
-export const sheriffConfig: SheriffConfig = {
-  enableBarrelLess: true, // модули без index.ts (barrel-less)
-  modules: {
-    // Путь к папке → теги
-    'src/app/customer':  ['domain:customer',  'type:feature'],
-    'src/app/supplier':  ['domain:supplier',  'type:feature'],
-    'src/app/admin':     ['domain:admin',     'type:feature'],
-    'packages/shared-contracts': ['type:shared'],
-    'packages/shared-logic':     ['type:shared'],
-    'packages/shared-ui':        ['type:shared-ui'],
-  },
-  depRules: {
-    // Каждый домен может зависеть только от себя и shared
-    'domain:*': ['domain:$*', 'type:shared', 'type:shared-ui'],
-    // shared не зависит от доменов
-    'type:shared': 'type:shared',
-    'type:shared-ui': ['type:shared', 'type:shared-ui'],
-    // root (AppComponent) может импортировать feature-модули
-    root: ['type:feature', 'type:shared'],
-  },
-};
+modules: {
+  // FSD layers
+  'frontend/web/src/app/pages/landing':   ['layer:page',    'page:landing'],
+  'frontend/web/src/app/pages/customer':  ['layer:page',    'page:customer'],
+  'frontend/web/src/app/pages/supplier':  ['layer:page',    'page:supplier'],
+  'frontend/web/src/app/pages/admin':     ['layer:page',    'page:admin'],
+  'frontend/web/src/app/widgets':         ['layer:widget'],
+  'frontend/web/src/app/features':        ['layer:feature'],
+  'frontend/web/src/app/entities':        ['layer:entity'],
+  'frontend/web/src/app/shared':          ['layer:shared-local'],
+  // Shared packages
+  'packages/shared-contracts': ['type:shared'],
+  'packages/shared-logic':     ['type:shared'],
+  'packages/shared-ui':        ['type:shared-ui'],
+},
+depRules: {
+  // FSD: каждый слой может импортировать только нижестоящие
+  'layer:page':    ['layer:widget', 'layer:feature', 'layer:entity', 'layer:shared-local', 'type:shared', 'type:shared-ui'],
+  'layer:widget':  ['layer:feature', 'layer:entity', 'layer:shared-local', 'type:shared', 'type:shared-ui'],
+  'layer:feature': ['layer:entity', 'layer:shared-local', 'type:shared', 'type:shared-ui'],
+  'layer:entity':  ['layer:shared-local', 'type:shared', 'type:shared-ui'],
+  'layer:shared-local': ['type:shared', 'type:shared-ui'],
+}
 ```
 
 ### ESLint интеграция (flat config — `eslint.config.js`)
@@ -182,6 +210,7 @@ module.exports = tseslint.config(
 - **Wildcard `domain:*` → `domain:$*`** — каждый домен может зависеть только от себя
 
 ### Правила проекта iOrder
+
 - `shared-contracts` и `shared-logic` доступны всем модулям
 - `shared-ui` доступен только фронтенд-модулям
 - Микросервисы не должны импортировать друг из друга — только через `shared-contracts`
