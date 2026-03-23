@@ -36,6 +36,7 @@
     "check:fix": "bun run format && bun run lint:fix && bun run knip:fix",
     "prebuild:web": "bun run check",
     "k8s:deploy": "bash scripts/k8s-deploy.sh",
+    "k8s:deploy:frontend": "bash scripts/k8s-deploy-frontend.sh",
     "k8s:pods": "kubectl get pods -o wide",
     "k8s:logs": "kubectl logs -l app.kubernetes.io/part-of=iorder-market --tail=50",
     "k8s:forward": "kubectl port-forward svc/iorder-api-gateway 30080:3000",

@@ -94,10 +94,11 @@ else
 fi
 
 echo "[5/5] Setting up port-forward..."
+pkill -f "k8s-forward.sh" 2>/dev/null || true
 pkill -f "port-forward.*iorder-frontend" 2>/dev/null || true
 sleep 1
-kubectl port-forward svc/iorder-frontend ${PORT}:80 &>/tmp/k8s-portforward.log &
-sleep 2
+bash scripts/k8s-forward.sh "$PORT" &>/tmp/k8s-portforward.log &
+sleep 3
 
 echo ""
 echo "=== Deploy Complete ==="
