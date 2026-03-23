@@ -3,7 +3,7 @@
   "workspaces": {
     ".": {
       "entry": ["config/index.ts"],
-      "project": ["config/**/*.ts"],
+      "project": ["config/**/*.ts", "packages/shared-contracts/src/**/*.ts"],
       "ignoreDependencies": [
         "@angular/forms",
         "@angular/platform-browser-dynamic",
@@ -18,13 +18,7 @@
       "entry": ["src/main.ts"],
       "project": ["src/**/*.ts"]
     },
-    "packages/shared-contracts": {
-      "project": ["src/**/*.ts"]
-    },
-    "packages/shared-logic": {
-      "project": ["src/**/*.ts"]
-    },
-"microservices/api-gateway": {
+    "microservices/api-gateway": {
       "project": ["src/**/*.ts"],
       "ignoreDependencies": ["@elysiajs/eden"]
     },

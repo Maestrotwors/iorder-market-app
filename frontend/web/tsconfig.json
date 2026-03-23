@@ -22,7 +22,6 @@
     "skipLibCheck": true,
     "paths": {
       "@iorder/shared-contracts": ["../../packages/shared-contracts/src/index.ts"],
-      "@iorder/shared-logic": ["../../packages/shared-logic/src/index.ts"],
       "@pages": ["./src/app/pages/index.ts"],
       "@pages/*": ["./src/app/pages/*"],
       "@widgets": ["./src/app/widgets/index.ts"],

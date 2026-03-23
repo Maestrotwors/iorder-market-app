@@ -21,8 +21,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "@iorder/shared-contracts": ["packages/shared-contracts/src/index.ts"],
-      "@iorder/shared-logic": ["packages/shared-logic/src/index.ts"]
+      "@iorder/shared-contracts": ["packages/shared-contracts/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

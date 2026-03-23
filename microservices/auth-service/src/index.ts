@@ -28,16 +28,20 @@ if (config.isDev) {
 }
 
 app
-  .get('/health', () => ({
-    status: 'ok',
-    service: 'auth-service',
-    timestamp: new Date().toISOString(),
-  }), {
-    detail: {
-      summary: 'Auth service health check',
-      tags: ['Health'],
+  .get(
+    '/health',
+    () => ({
+      status: 'ok',
+      service: 'auth-service',
+      timestamp: new Date().toISOString(),
+    }),
+    {
+      detail: {
+        summary: 'Auth service health check',
+        tags: ['Health'],
+      },
     },
-  })
+  )
   .mount(auth.handler)
   .listen(port);
 

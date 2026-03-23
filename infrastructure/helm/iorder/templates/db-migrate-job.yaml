@@ -46,11 +46,5 @@ spec:
               value: {{ include "iorder.databaseUrl" . | quote }}
             - name: JWT_SECRET
               value: {{ .Values.secrets.jwtSecret | quote }}
-          resources:
-            requests:
-              cpu: "100m"
-              memory: "128Mi"
-            limits:
-              cpu: "500m"
-              memory: "256Mi"
+          resources: {}
 {{- end }}

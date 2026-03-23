@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { AppStore } from '@store';
+import { AuthStore } from '@features';
 
 @Component({
   selector: 'app-root',
@@ -11,9 +11,9 @@ import { AppStore } from '@store';
   styleUrl: './app.scss',
 })
 export class App {
-  private readonly appStore = inject(AppStore);
+  private readonly authStore = inject(AuthStore);
 
   constructor() {
-    this.appStore.init();
+    this.authStore.init();
   }
 }
