@@ -15,7 +15,7 @@ DOCKERFILE_FRONTEND="infrastructure/docker/Dockerfile.frontend"
 HELM_CHART="infrastructure/helm/iorder"
 HELM_VALUES_PORTS="infrastructure/helm/iorder/values-ports.yaml"
 HELM_VALUES_DEV="infrastructure/helm/iorder/values-dev.yaml"
-RELEASE_NAME="iorder"
+RELEASE_NAME="iorder-market"
 EXTERNAL_DB_URL="${DATABASE_URL:-}"
 PORT=$(bun -e 'import p from "./config/ports.json";console.log(p.kubernetes.frontendNodePort)')
 

@@ -21,8 +21,8 @@ echo "  ✓ frontend image"
 # 3. Rolling restart (zero downtime — maxUnavailable: 0, 2 replicas)
 # Do NOT touch port-forward — it stays connected to the Service
 echo "[3/3] Rolling restart..."
-kubectl rollout restart deployment iorder-frontend
-kubectl rollout status deployment iorder-frontend --timeout=120s
+kubectl rollout restart deployment iorder-market-frontend
+kubectl rollout status deployment iorder-market-frontend --timeout=120s
 
 echo ""
 echo "✓ Frontend updated: http://localhost:${PORT}"

@@ -41,8 +41,8 @@
     "k8s:deploy:frontend": "bash scripts/k8s-deploy-frontend.sh",
     "k8s:pods": "kubectl get pods -o wide",
     "k8s:logs": "kubectl logs -l app.kubernetes.io/part-of=iorder-market --tail=50",
-    "k8s:forward": "kubectl port-forward svc/iorder-api-gateway 30080:3000",
-    "k8s:stop": "helm uninstall iorder; pkill -f 'port-forward.*iorder' || true",
+    "k8s:forward": "kubectl port-forward svc/iorder-market-api-gateway 30080:3000",
+    "k8s:stop": "helm uninstall iorder-market; pkill -f 'port-forward.*iorder' || true",
     "argocd": "bash scripts/argocd-setup.sh",
     "argocd:watch": "bash scripts/argocd-watch.sh"
   },

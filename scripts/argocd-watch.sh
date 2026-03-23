@@ -31,13 +31,13 @@ build_and_restart() {
   bun run ng build web 2>&1 | tail -1
 
   echo "[BUILD] Frontend Docker image..."
-  docker build -f "$DOCKERFILE_FRONTEND" -t iorder-frontend:latest . --quiet
+  docker build -f "$DOCKERFILE_FRONTEND" -t "iorder/frontend:latest" . --quiet
 
   # Build backend services in parallel
   for SERVICE in "${BACKEND_SERVICES[@]}"; do
     echo "[BUILD] $SERVICE..."
     docker build -f "$DOCKERFILE_BACKEND" --build-arg SERVICE="$SERVICE" \
-      -t "iorder-${SERVICE}:latest" . --quiet &
+      -t "iorder/${SERVICE}:latest" . --quiet &
   done
   wait
 
