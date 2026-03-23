@@ -21,6 +21,16 @@ module.exports = tseslint.config(
   },
   eslintPluginPrettier,
   {
-    ignores: ['node_modules/', 'dist/', '.angular/', 'database/', 'config/', 'scripts/'],
+    ignores: [
+      'node_modules/',
+      'dist/',
+      '.angular/',
+      'database/',
+      'config/',
+      'scripts/',
+      'packages/',
+      'microservices/',
+      'infrastructure/',
+    ],
   },
 );
