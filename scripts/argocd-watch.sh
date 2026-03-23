@@ -9,13 +9,27 @@ DOCKERFILE_FRONTEND="infrastructure/docker/Dockerfile.frontend"
 POLL_INTERVAL=30
 LAST_COMMIT=""
 
-echo "=== iOrder — Auto-deploy watcher ==="
-echo "Watching 'main' branch every ${POLL_INTERVAL}s..."
-echo "Press Ctrl+C to stop."
-echo ""
+ensure_minikube() {
+  if ! minikube status 2>/dev/null | grep -q "apiserver: Running"; then
+    echo "[INFO] Starting minikube..."
+    minikube start
+  fi
+}
 
-# Use Minikube's Docker daemon
-eval $(minikube docker-env)
+ensure_tunnel() {
+  if ! pgrep -f "minikube tunnel" >/dev/null 2>&1; then
+    echo "[INFO] Starting minikube tunnel..."
+    nohup minikube tunnel &>/tmp/minikube-tunnel.log &
+    sleep 2
+  fi
+}
+
+wait_for_pods() {
+  echo "[WAIT] Waiting for all pods to be ready..."
+  for DEPLOY in iorder-market-frontend iorder-market-api-gateway iorder-market-products-service iorder-market-auth-service; do
+    kubectl rollout status deployment "$DEPLOY" --timeout=180s 2>/dev/null || true
+  done
+}
 
 build_and_restart() {
   local COMMIT=$1
@@ -25,6 +39,11 @@ build_and_restart() {
   # Pull latest
   git checkout main --quiet
   git pull origin main --quiet
+
+  # Ensure minikube & tunnel are alive after pull
+  ensure_minikube
+  eval $(minikube docker-env)
+  ensure_tunnel
 
   # Build frontend
   echo "[BUILD] Angular..."
@@ -45,16 +64,24 @@ build_and_restart() {
   echo "[DEPLOY] Rolling restart..."
   kubectl rollout restart deployment -l app.kubernetes.io/instance=iorder-market 2>/dev/null || true
 
-  # Wait for rollout
-  for DEPLOY in iorder-market-frontend iorder-market-api-gateway iorder-market-products-service iorder-market-auth-service; do
-    kubectl rollout status deployment "$DEPLOY" --timeout=120s 2>/dev/null || true
-  done
+  wait_for_pods
 
   echo "[OK] Deploy complete: ${COMMIT:0:7}"
   echo ""
 }
 
-# Main loop
+# --- Startup ---
+echo "=== iOrder — Auto-deploy watcher ==="
+
+ensure_minikube
+eval $(minikube docker-env)
+ensure_tunnel
+
+echo "Watching 'main' branch every ${POLL_INTERVAL}s..."
+echo "Press Ctrl+C to stop."
+echo ""
+
+# --- Main loop ---
 while true; do
   # Fetch latest from remote
   git fetch origin main --quiet 2>/dev/null || true
@@ -66,9 +93,16 @@ while true; do
       build_and_restart "$REMOTE_COMMIT"
     else
       echo "[INFO] Current main: ${REMOTE_COMMIT:0:7}"
+      # Ensure everything is healthy on first run
+      ensure_tunnel
+      wait_for_pods
+      echo "[OK] All pods ready."
     fi
     LAST_COMMIT="$REMOTE_COMMIT"
   fi
+
+  # Keep tunnel alive between polls
+  ensure_tunnel
 
   sleep "$POLL_INTERVAL"
 done

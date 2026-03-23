@@ -90,13 +90,20 @@ wait
 
 # Ensure minikube tunnel is running
 if ! pgrep -f "minikube tunnel" >/dev/null; then
+  echo "[INFO] Starting minikube tunnel..."
   nohup minikube tunnel &>/tmp/minikube-tunnel.log &
+  sleep 2
 fi
 
+# Verify frontend is accessible
 echo ""
 echo "=== Deploy Complete ==="
 kubectl get pods --field-selector=status.phase=Running -o wide
 echo ""
-echo "Open: http://localhost:${PORT}"
+if curl -s -o /dev/null -w "" http://localhost:${PORT}/ 2>/dev/null; then
+  echo "✓ Frontend: http://localhost:${PORT}"
+else
+  echo "Frontend: http://localhost:${PORT} (may take a few seconds to become available)"
+fi
 echo "  /           → Angular frontend"
 echo "  /api/*      → API Gateway → Microservices"
