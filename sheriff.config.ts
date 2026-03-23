@@ -16,9 +16,8 @@ export const config: SheriffConfig = {
     'frontend/web/src/app/store': ['layer:store'],
     'frontend/web/src/app/ui': ['layer:ui'],
 
-    // Shared packages
+    // Shared contracts (types, schemas, endpoints)
     'packages/shared-contracts': ['type:shared'],
-    'packages/shared-logic': ['type:shared'],
 
     // Microservices
     'microservices/api-gateway': ['layer:gateway'],

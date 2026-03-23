@@ -21,9 +21,6 @@
     "packages/shared-contracts": {
       "project": ["src/**/*.ts"]
     },
-    "packages/shared-logic": {
-      "project": ["src/**/*.ts"]
-    },
     "microservices/api-gateway": {
       "project": ["src/**/*.ts"],
       "ignoreDependencies": ["@elysiajs/eden"]
