@@ -12,13 +12,7 @@ frontend:
     repository: iorder/frontend
     tag: latest
     pullPolicy: IfNotPresent
-  resources:
-    requests:
-      cpu: "50m"
-      memory: "64Mi"
-    limits:
-      cpu: "200m"
-      memory: "128Mi"
+  resources: {}
 
 # --- API Gateway ---
 apiGateway:
@@ -28,13 +22,7 @@ apiGateway:
     tag: latest
     pullPolicy: IfNotPresent
   port: 3000
-  resources:
-    requests:
-      cpu: "100m"
-      memory: "128Mi"
-    limits:
-      cpu: "500m"
-      memory: "256Mi"
+  resources: {}
   hpa:
     enabled: false
 
@@ -46,13 +34,7 @@ productsService:
     tag: latest
     pullPolicy: IfNotPresent
   port: 3001
-  resources:
-    requests:
-      cpu: "100m"
-      memory: "128Mi"
-    limits:
-      cpu: "500m"
-      memory: "256Mi"
+  resources: {}
   hpa:
     enabled: true
     minReplicas: 3
@@ -67,13 +49,7 @@ authService:
     tag: latest
     pullPolicy: IfNotPresent
   port: 3002
-  resources:
-    requests:
-      cpu: "100m"
-      memory: "128Mi"
-    limits:
-      cpu: "500m"
-      memory: "256Mi"
+  resources: {}
   hpa:
     enabled: true
     minReplicas: 3
@@ -104,13 +80,7 @@ postgresql:
   storage:
     size: 10Gi
     storageClass: ""
-  resources:
-    requests:
-      cpu: "250m"
-      memory: "256Mi"
-    limits:
-      cpu: "1000m"
-      memory: "512Mi"
+  resources: {}
 
 # --- RedPanda ---
 redpanda:
@@ -125,13 +95,7 @@ redpanda:
     port: 18081
   restProxy:
     port: 18082
-  resources:
-    requests:
-      cpu: "250m"
-      memory: "512Mi"
-    limits:
-      cpu: "1000m"
-      memory: "1Gi"
+  resources: {}
 
 # --- Secrets ---
 secrets:
