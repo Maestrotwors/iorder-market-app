@@ -10,13 +10,14 @@ export const config: SheriffConfig = {
     'frontend/web/src/app/pages/admin': ['layer:page', 'page:admin'],
     'frontend/web/src/app/widgets': ['layer:widget'],
     'frontend/web/src/app/features': ['layer:feature'],
-    'frontend/web/src/app/entities': ['layer:entity'],
+    'frontend/web/src/app/schemas': ['layer:schemas'],
     'frontend/web/src/app/shared': ['layer:shared-local'],
+    'frontend/web/src/app/store': ['layer:store'],
+    'frontend/web/src/app/ui': ['layer:ui'],
 
     // Shared packages
     'packages/shared-contracts': ['type:shared'],
     'packages/shared-logic': ['type:shared'],
-    'packages/shared-ui': ['type:shared-ui'],
 
     // Microservices
     'microservices/api-gateway': ['layer:gateway'],
@@ -24,19 +25,26 @@ export const config: SheriffConfig = {
     'microservices/auth-service': ['layer:service'],
   },
   depRules: {
-    root: ['layer:page', 'layer:widget', 'layer:feature', 'layer:entity', 'layer:shared-local', 'type:shared', 'type:shared-ui', 'noTag'],
+    root: ['layer:page', 'layer:widget', 'layer:feature', 'layer:schemas', 'layer:shared-local', 'layer:store', 'layer:ui', 'type:shared', 'noTag'],
     noTag: ['noTag', 'type:shared'],
 
     // FSD: each layer can only import lower layers (top → bottom)
-    'layer:page': ['layer:widget', 'layer:feature', 'layer:entity', 'layer:shared-local', 'type:shared', 'type:shared-ui'],
-    'layer:widget': ['layer:feature', 'layer:entity', 'layer:shared-local', 'type:shared', 'type:shared-ui'],
-    'layer:feature': ['layer:entity', 'layer:shared-local', 'type:shared', 'type:shared-ui'],
-    'layer:entity': ['layer:shared-local', 'type:shared', 'type:shared-ui'],
-    'layer:shared-local': ['type:shared', 'type:shared-ui'],
+    'layer:page': ['layer:widget', 'layer:feature', 'layer:schemas', 'layer:shared-local', 'layer:store', 'layer:ui', 'type:shared'],
+    'layer:widget': ['layer:feature', 'layer:schemas', 'layer:shared-local', 'layer:store', 'layer:ui', 'type:shared'],
+    'layer:feature': ['layer:schemas', 'layer:shared-local', 'layer:store', 'layer:ui', 'type:shared'],
+    'layer:shared-local': ['layer:store', 'type:shared'],
+
+    // Schemas layer — frontend-only Zod schemas
+    'layer:schemas': ['type:shared'],
+
+    // Store layer — global state, depends on shared
+    'layer:store': ['layer:shared-local', 'type:shared'],
+
+    // UI layer — only depends on shared contracts
+    'layer:ui': ['type:shared'],
 
     // Shared packages don't depend on frontend layers
     'type:shared': 'type:shared',
-    'type:shared-ui': ['type:shared', 'type:shared-ui'],
 
     // Microservices
     'layer:gateway': ['layer:service', 'type:shared'],

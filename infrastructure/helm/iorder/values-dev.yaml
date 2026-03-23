@@ -12,14 +12,11 @@ frontend:
     repository: iorder/frontend
     tag: latest
     pullPolicy: Never
-  serviceType: NodePort
-  nodePort: 30080
+  serviceType: LoadBalancer
+  loadBalancerPort: 30080
   resources:
     requests:
-      cpu: "50m"
-      memory: "64Mi"
-    limits:
-      cpu: "200m"
+      cpu: "100m"
       memory: "128Mi"
 
 # --- API Gateway ---
@@ -31,11 +28,8 @@ apiGateway:
     pullPolicy: Never
   resources:
     requests:
-      cpu: "50m"
-      memory: "64Mi"
-    limits:
       cpu: "200m"
-      memory: "128Mi"
+      memory: "256Mi"
   hpa:
     enabled: false
 
@@ -48,11 +42,8 @@ productsService:
     pullPolicy: Never
   resources:
     requests:
-      cpu: "50m"
-      memory: "64Mi"
-    limits:
       cpu: "200m"
-      memory: "128Mi"
+      memory: "256Mi"
   hpa:
     enabled: false
 
@@ -65,11 +56,8 @@ authService:
     pullPolicy: Never
   resources:
     requests:
-      cpu: "100m"
-      memory: "128Mi"
-    limits:
-      cpu: "300m"
-      memory: "256Mi"
+      cpu: "200m"
+      memory: "512Mi"
   hpa:
     enabled: false
 
@@ -97,10 +85,7 @@ postgresql:
 redpanda:
   resources:
     requests:
-      cpu: "100m"
-      memory: "256Mi"
-    limits:
-      cpu: "500m"
+      cpu: "200m"
       memory: "512Mi"
 
 # --- Secrets ---

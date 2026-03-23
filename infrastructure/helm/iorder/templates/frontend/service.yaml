@@ -9,7 +9,7 @@ metadata:
 spec:
   type: {{ .Values.frontend.serviceType | default "ClusterIP" }}
   ports:
-    - port: 80
+    - port: {{ .Values.frontend.loadBalancerPort | default 80 }}
       targetPort: 80
       protocol: TCP
       name: http

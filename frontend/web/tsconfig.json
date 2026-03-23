@@ -1,6 +1,7 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "baseUrl": ".",
     "outDir": "./dist",
     "forceConsistentCasingInFileNames": true,
     "strict": true,
@@ -22,7 +23,20 @@
     "paths": {
       "@iorder/shared-contracts": ["../../packages/shared-contracts/src/index.ts"],
       "@iorder/shared-logic": ["../../packages/shared-logic/src/index.ts"],
-      "@iorder/shared-ui": ["../../packages/shared-ui/src/index.ts"]
+      "@pages": ["./src/app/pages/index.ts"],
+      "@pages/*": ["./src/app/pages/*"],
+      "@widgets": ["./src/app/widgets/index.ts"],
+      "@widgets/*": ["./src/app/widgets/*"],
+      "@features": ["./src/app/features/index.ts"],
+      "@features/*": ["./src/app/features/*"],
+      "@schemas": ["./src/app/schemas/index.ts"],
+      "@schemas/*": ["./src/app/schemas/*"],
+      "@shared": ["./src/app/shared/index.ts"],
+      "@shared/*": ["./src/app/shared/*"],
+      "@store": ["./src/app/store/index.ts"],
+      "@store/*": ["./src/app/store/*"],
+      "@ui": ["./src/app/ui/index.ts"],
+      "@ui/*": ["./src/app/ui/*"]
     }
   },
   "angularCompilerOptions": {

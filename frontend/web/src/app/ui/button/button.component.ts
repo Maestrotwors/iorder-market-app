@@ -31,7 +31,9 @@ export type UiButtonSize = 'sm' | 'md' | 'lg';
       border-radius: var(--ui-border-radius, 8px);
       font-weight: 500;
       cursor: pointer;
-      transition: background-color 0.2s, opacity 0.2s;
+      transition:
+        background-color 0.2s,
+        opacity 0.2s;
       width: 100%;
 
       &:disabled {
@@ -55,28 +57,38 @@ export type UiButtonSize = 'sm' | 'md' | 'lg';
       &--primary {
         background: var(--ui-primary-color, #3b82f6);
         color: #fff;
-        &:hover:not(:disabled) { background: var(--ui-primary-hover, #2563eb); }
+        &:hover:not(:disabled) {
+          background: var(--ui-primary-hover, #2563eb);
+        }
       }
       &--secondary {
         background: var(--ui-secondary-color, #6b7280);
         color: #fff;
-        &:hover:not(:disabled) { background: var(--ui-secondary-hover, #4b5563); }
+        &:hover:not(:disabled) {
+          background: var(--ui-secondary-hover, #4b5563);
+        }
       }
       &--outline {
         background: transparent;
         border: 1px solid var(--ui-border-color, #d1d5db);
         color: var(--ui-text-color, #374151);
-        &:hover:not(:disabled) { background: var(--ui-hover-bg, #f3f4f6); }
+        &:hover:not(:disabled) {
+          background: var(--ui-hover-bg, #f3f4f6);
+        }
       }
       &--ghost {
         background: transparent;
         color: var(--ui-text-color, #374151);
-        &:hover:not(:disabled) { background: var(--ui-hover-bg, #f3f4f6); }
+        &:hover:not(:disabled) {
+          background: var(--ui-hover-bg, #f3f4f6);
+        }
       }
       &--danger {
         background: var(--ui-error-color, #ef4444);
         color: #fff;
-        &:hover:not(:disabled) { background: #dc2626; }
+        &:hover:not(:disabled) {
+          background: #dc2626;
+        }
       }
 
       &__spinner {
@@ -90,7 +102,9 @@ export type UiButtonSize = 'sm' | 'md' | 'lg';
     }
 
     @keyframes ui-spin {
-      to { transform: rotate(360deg); }
+      to {
+        transform: rotate(360deg);
+      }
     }
   `,
 })

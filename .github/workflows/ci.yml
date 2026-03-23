@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [prod]
+  pull_request:
+    branches: [prod]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Check formatting
+        run: bun run format:check
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Knip (unused code)
+        run: bun run knip
+
+      - name: Build frontend
+        run: bun run build:web

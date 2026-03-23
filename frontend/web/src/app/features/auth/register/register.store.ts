@@ -1,8 +1,8 @@
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { signalStore, withState, withMethods, patchState } from '@ngrx/signals';
-import { AuthService } from '../../../shared/api/auth.service';
-import { AppStore } from '../../../shared/store/app.store';
+import { AuthService } from '@shared/api/auth.service';
+import { AppStore } from '@store';
 
 export interface RegisterState {
   loading: boolean;
