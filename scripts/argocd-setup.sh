@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Argo CD setup script for iOrder Market
-# Installs Argo CD, applies Application, runs stable port-forward with auto-restart.
+# Installs Argo CD, applies Application, ensures tunnel, runs stable port-forward.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -19,7 +19,7 @@ trap cleanup SIGINT SIGTERM
 echo "=== iOrder Market — Argo CD Setup ==="
 
 # 1. Ensure minikube is running
-if ! minikube status | grep -q "apiserver: Running"; then
+if ! minikube status 2>/dev/null | grep -q "apiserver: Running"; then
   echo "[INFO] Starting minikube..."
   minikube start
 fi
@@ -34,13 +34,13 @@ else
     -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 fi
 
-# 3. Wait for pods
-echo "[INFO] Waiting for Argo CD pods..."
-kubectl wait --for=condition=ready pod \
-  -l app.kubernetes.io/part-of=argocd \
-  -n "$ARGOCD_NAMESPACE" \
-  --timeout=300s
-echo "[OK] Argo CD pods ready."
+# 3. Wait for ArgoCD deployments to be ready
+echo "[INFO] Waiting for Argo CD..."
+for DEPLOY in argocd-server argocd-repo-server argocd-application-controller; do
+  kubectl rollout status deployment "$DEPLOY" -n "$ARGOCD_NAMESPACE" --timeout=300s 2>/dev/null || \
+  kubectl rollout status statefulset "$DEPLOY" -n "$ARGOCD_NAMESPACE" --timeout=300s 2>/dev/null || true
+done
+echo "[OK] Argo CD ready."
 
 # 4. Set polling interval to 30s
 kubectl patch configmap argocd-cm -n "$ARGOCD_NAMESPACE" \
@@ -50,7 +50,15 @@ kubectl patch configmap argocd-cm -n "$ARGOCD_NAMESPACE" \
 kubectl apply -f "$PROJECT_ROOT/infrastructure/argocd/application.yaml"
 echo "[OK] Application 'iorder-market' applied."
 
-# 6. Print credentials
+# 6. Ensure minikube tunnel for LoadBalancer services
+if ! pgrep -f "minikube tunnel" >/dev/null 2>&1; then
+  echo "[INFO] Starting minikube tunnel..."
+  nohup minikube tunnel &>/tmp/minikube-tunnel.log &
+  sleep 2
+fi
+echo "[OK] Minikube tunnel running."
+
+# 7. Print credentials
 ADMIN_PASSWORD=$(kubectl -n "$ARGOCD_NAMESPACE" get secret argocd-initial-admin-secret \
   -o jsonpath="{.data.password}" | base64 -d 2>/dev/null || echo "<not found>")
 
@@ -63,7 +71,7 @@ echo "  Password: ${ADMIN_PASSWORD}"
 echo "========================================"
 echo ""
 
-# 7. Stable port-forward with auto-restart
+# 8. Stable port-forward with auto-restart
 echo "[INFO] Starting port-forward (auto-restarts on failure)..."
 echo "[INFO] Press Ctrl+C to stop."
 
@@ -85,10 +93,15 @@ while true; do
     done
     echo "[OK] Cluster back online."
 
-    # Wait for argocd pods after recovery
-    kubectl wait --for=condition=ready pod \
-      -l app.kubernetes.io/part-of=argocd \
-      -n "$ARGOCD_NAMESPACE" \
-      --timeout=300s 2>/dev/null || true
+    # Wait for argocd after recovery
+    for DEPLOY in argocd-server argocd-repo-server; do
+      kubectl rollout status deployment "$DEPLOY" -n "$ARGOCD_NAMESPACE" --timeout=300s 2>/dev/null || true
+    done
+  fi
+
+  # Ensure tunnel after recovery
+  if ! pgrep -f "minikube tunnel" >/dev/null 2>&1; then
+    nohup minikube tunnel &>/tmp/minikube-tunnel.log &
+    sleep 2
   fi
 done
