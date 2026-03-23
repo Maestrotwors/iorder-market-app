@@ -1,9 +1,5 @@
 import { Elysia, t } from 'elysia';
-import {
-  ProductFilterSchema,
-  CreateProductSchema,
-  UpdateProductSchema,
-} from '@iorder/shared-contracts';
+import { CreateProductSchema, UpdateProductSchema } from '@iorder/shared-contracts';
 import type { IProduct, PaginatedResponse, ApiResponse } from '@iorder/shared-contracts';
 
 // Mock data — will be replaced with Prisma queries

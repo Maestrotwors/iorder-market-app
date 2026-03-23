@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { AuthStore } from '@features/auth/auth.store';
+import { AuthStore } from '@features';
 
 @Component({
   selector: 'app-root',
