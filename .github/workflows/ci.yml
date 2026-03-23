@@ -4,49 +4,110 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
-  ci:
+  install:
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: iorder
-          POSTGRES_PASSWORD: iorder_secret
-          POSTGRES_DB: iorder_db
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    env:
-      DATABASE_URL: postgresql://iorder:iorder_secret@localhost:5432/iorder_db
-
     steps:
-      - uses: actions/checkout@v4
-
+      - uses: actions/checkout@v5
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.1.45'
-
-      - name: Install dependencies
+      - name: Cache node_modules
+        uses: actions/cache@v5
+        id: cache
+        with:
+          path: node_modules
+          key: bun-${{ hashFiles('bun.lockb', '**/package.json') }}
+      - name: Install
+        if: steps.cache.outputs.cache-hit != 'true'
         run: bun install
 
-      - name: Generate Prisma client
-        run: bun run db:generate
+  lint:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.1.45'
+      - uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: bun-${{ hashFiles('bun.lockb', '**/package.json') }}
+      - run: bun run format:check
+      - run: bun run lint
 
-      - name: Check formatting
-        run: bun run format:check
+  test:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.1.45'
+      - uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: bun-${{ hashFiles('bun.lockb', '**/package.json') }}
+      - run: bun run test:web
 
-      - name: Lint
-        run: bun run lint
+  build-frontend:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.1.45'
+      - uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: bun-${{ hashFiles('bun.lockb', '**/package.json') }}
+      - run: bun run ng build web
 
-      - name: Tests
-        run: bun run test:web
+  build-backend:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.1.45'
+      - uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: bun-${{ hashFiles('bun.lockb', '**/package.json') }}
+      - name: Typecheck microservices
+        run: |
+          cd microservices/api-gateway && bunx tsc --noEmit && echo "✓ api-gateway" && cd ../..
+          cd microservices/products-service && bunx tsc --noEmit && echo "✓ products-service" && cd ../..
+          cd microservices/auth-service && bunx tsc --noEmit && echo "✓ auth-service" && cd ../..
 
-      - name: Build frontend
-        run: bun run ng build web
+  security:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.1.45'
+      - run: bun audit || true
+
+  ci:
+    if: always()
+    needs: [lint, test, build-frontend, build-backend, security]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        run: |
+          if [[ "${{ needs.lint.result }}" != "success" || \
+                "${{ needs.test.result }}" != "success" || \
+                "${{ needs.build-frontend.result }}" != "success" || \
+                "${{ needs.build-backend.result }}" != "success" ]]; then
+            echo "One or more required jobs failed"
+            exit 1
+          fi
