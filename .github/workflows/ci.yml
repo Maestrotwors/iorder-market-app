@@ -96,3 +96,18 @@ jobs:
         with:
           bun-version: '1.1.45'
       - run: bun audit || true
+
+  ci:
+    if: always()
+    needs: [lint, test, build-frontend, build-backend, security]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        run: |
+          if [[ "${{ needs.lint.result }}" != "success" || \
+                "${{ needs.test.result }}" != "success" || \
+                "${{ needs.build-frontend.result }}" != "success" || \
+                "${{ needs.build-backend.result }}" != "success" ]]; then
+            echo "One or more required jobs failed"
+            exit 1
+          fi
