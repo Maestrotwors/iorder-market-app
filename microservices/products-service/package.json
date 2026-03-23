@@ -15,7 +15,7 @@
     "elysia": "^1.2.0"
   },
   "devDependencies": {
-    "bun-types": "latest",
+    "bun-types": "^1.2.0",
     "prisma": "^6.0.0",
     "typescript": "^5.7.0"
   }

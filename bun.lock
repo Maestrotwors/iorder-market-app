@@ -53,7 +53,7 @@
         "jose": "^6.0.11",
       },
       "devDependencies": {
-        "bun-types": "latest",
+        "bun-types": "^1.2.0",
         "typescript": "^5.7.0",
       },
     },
@@ -68,7 +68,7 @@
         "jose": "^6.0.11",
       },
       "devDependencies": {
-        "bun-types": "latest",
+        "bun-types": "^1.2.0",
         "prisma": "^6.0.0",
         "typescript": "^5.7.0",
       },
@@ -84,7 +84,7 @@
         "elysia": "^1.2.0",
       },
       "devDependencies": {
-        "bun-types": "latest",
+        "bun-types": "^1.2.0",
         "prisma": "^6.0.0",
         "typescript": "^5.7.0",
       },
@@ -394,11 +394,11 @@
 
     "@inquirer/type": ["@inquirer/type@3.0.10", "", { "peerDependencies": { "@types/node": ">=18" }, "optionalPeers": ["@types/node"] }, "sha512-BvziSRxfz5Ov8ch0z/n3oijRSEcEsHnhggm4xFZe93DHcUCTlutlq9Ox4SVENAfcRD22UQq7T/atg9Wr3k09eA=="],
 
-    "@iorder/api-gateway": ["@iorder/api-gateway@workspace:microservices/api-gateway", { "dependencies": { "@elysiajs/cors": "^1.2.0", "@elysiajs/eden": "^1.2.0", "@elysiajs/openapi": "^1.4.14", "@iorder/shared-contracts": "packages/shared-contracts", "elysia": "^1.2.0", "jose": "^6.0.11" }, "devDependencies": { "bun-types": "latest", "typescript": "^5.7.0" } }],
+    "@iorder/api-gateway": ["@iorder/api-gateway@workspace:microservices/api-gateway", { "dependencies": { "@elysiajs/cors": "^1.2.0", "@elysiajs/eden": "^1.2.0", "@elysiajs/openapi": "^1.4.14", "@iorder/shared-contracts": "packages/shared-contracts", "elysia": "^1.2.0", "jose": "^6.0.11" }, "devDependencies": { "bun-types": "^1.2.0", "typescript": "^5.7.0" } }],
 
-    "@iorder/auth-service": ["@iorder/auth-service@workspace:microservices/auth-service", { "dependencies": { "@elysiajs/openapi": "^1.4.14", "@prisma/client": "^6.0.0", "better-auth": "^1.3.0", "elysia": "^1.2.0", "jose": "^6.0.11" }, "devDependencies": { "bun-types": "latest", "prisma": "^6.0.0", "typescript": "^5.7.0" } }],
+    "@iorder/auth-service": ["@iorder/auth-service@workspace:microservices/auth-service", { "dependencies": { "@elysiajs/openapi": "^1.4.14", "@prisma/client": "^6.0.0", "better-auth": "^1.3.0", "elysia": "^1.2.0", "jose": "^6.0.11" }, "devDependencies": { "bun-types": "^1.2.0", "prisma": "^6.0.0", "typescript": "^5.7.0" } }],
 
-    "@iorder/products-service": ["@iorder/products-service@workspace:microservices/products-service", { "dependencies": { "@elysiajs/cors": "^1.2.0", "@elysiajs/openapi": "^1.4.14", "@iorder/shared-contracts": "packages/shared-contracts", "@prisma/client": "^6.0.0", "elysia": "^1.2.0" }, "devDependencies": { "bun-types": "latest", "prisma": "^6.0.0", "typescript": "^5.7.0" } }],
+    "@iorder/products-service": ["@iorder/products-service@workspace:microservices/products-service", { "dependencies": { "@elysiajs/cors": "^1.2.0", "@elysiajs/openapi": "^1.4.14", "@iorder/shared-contracts": "packages/shared-contracts", "@prisma/client": "^6.0.0", "elysia": "^1.2.0" }, "devDependencies": { "bun-types": "^1.2.0", "prisma": "^6.0.0", "typescript": "^5.7.0" } }],
 
     "@iorder/shared-contracts": ["@iorder/shared-contracts@workspace:packages/shared-contracts", { "dependencies": { "zod": "^4.3.6" } }],
 
