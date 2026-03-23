@@ -4,10 +4,15 @@ on:
   pull_request:
     branches: [main]
 
-jobs:
-  ci:
-    runs-on: ubuntu-latest
+# Cancel in-progress runs for the same PR
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
+jobs:
+  # Shared setup — install + cache
+  install:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -15,14 +20,86 @@ jobs:
         with:
           bun-version: '1.2'
 
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        id: cache
+        with:
+          path: node_modules
+          key: bun-${{ hashFiles('bun.lockb', 'bun.lock', '**/package.json') }}
+
       - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
         run: bun install
 
-      - name: Prettier
-        run: bun run format:check
+  # Parallel jobs — all depend on install
+  lint:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.2'
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: bun-${{ hashFiles('bun.lockb', 'bun.lock', '**/package.json') }}
+      - run: bun run format:check
+      - run: bun run lint
 
-      - name: Lint
-        run: bun run lint
+  test:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.2'
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: bun-${{ hashFiles('bun.lockb', 'bun.lock', '**/package.json') }}
+      - run: bun run test:web
 
-      - name: Tests
-        run: bun run test:web
+  build-frontend:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.2'
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: bun-${{ hashFiles('bun.lockb', 'bun.lock', '**/package.json') }}
+      - run: bun run ng build web
+
+  build-backend:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.2'
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: bun-${{ hashFiles('bun.lockb', 'bun.lock', '**/package.json') }}
+      - name: Typecheck microservices
+        run: |
+          cd microservices/api-gateway && bunx tsc --noEmit && echo "✓ api-gateway" && cd ../..
+          cd microservices/products-service && bunx tsc --noEmit && echo "✓ products-service" && cd ../..
+          cd microservices/auth-service && bunx tsc --noEmit && echo "✓ auth-service" && cd ../..
+
+  security:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.2'
+      - name: Check for known vulnerabilities
+        run: bun audit || true
