@@ -1,8 +1,8 @@
 # Dependencies
 node_modules
 
-# Build output
-dist
+# Build output (keep dist/web for frontend Dockerfile)
+!dist/web
 .angular
 
 # Git

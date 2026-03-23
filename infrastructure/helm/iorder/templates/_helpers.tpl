@@ -52,12 +52,26 @@ app.kubernetes.io/instance: {{ .context.Release.Name }}
 
 {{/*
 PostgreSQL connection URL
+When database.external.enabled=true and url is set, use the external URL directly.
+Otherwise, construct URL from postgresql.* values (internal deployment).
 */}}
 {{- define "iorder.databaseUrl" -}}
-{{- if .Values.postgresql.externalHost -}}
-postgresql://{{ .Values.postgresql.username }}:{{ .Values.secrets.databasePassword }}@{{ .Values.postgresql.externalHost }}:{{ .Values.postgresql.port }}/{{ .Values.postgresql.database }}
+{{- if and .Values.database .Values.database.external .Values.database.external.enabled .Values.database.external.url -}}
+{{- .Values.database.external.url -}}
 {{- else -}}
 postgresql://{{ .Values.postgresql.username }}:{{ .Values.secrets.databasePassword }}@{{ include "iorder.fullname" . }}-postgresql:{{ .Values.postgresql.port }}/{{ .Values.postgresql.database }}
+{{- end -}}
+{{- end }}
+
+{{/*
+Whether internal PostgreSQL should be deployed.
+Disabled when external database is configured.
+*/}}
+{{- define "iorder.postgresqlEnabled" -}}
+{{- if and .Values.database .Values.database.external .Values.database.external.enabled -}}
+false
+{{- else -}}
+{{- .Values.postgresql.enabled -}}
 {{- end -}}
 {{- end }}
 

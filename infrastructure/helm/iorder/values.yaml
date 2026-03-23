@@ -80,7 +80,17 @@ authService:
     maxReplicas: 10
     targetCPUUtilization: 70
 
-# --- PostgreSQL ---
+# --- Database ---
+# External database (takes precedence when enabled)
+database:
+  external:
+    enabled: false
+    # Full PostgreSQL connection URL (overrides all other DB settings)
+    # Example: postgresql://user:password@rds-host.amazonaws.com:5432/iorder_db
+    url: ""
+
+# --- PostgreSQL (internal, deployed inside K8s) ---
+# Disabled automatically when database.external.enabled=true
 postgresql:
   enabled: true
   image:

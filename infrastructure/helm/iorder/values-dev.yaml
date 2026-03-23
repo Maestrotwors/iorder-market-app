@@ -73,9 +73,15 @@ authService:
   hpa:
     enabled: false
 
-# --- PostgreSQL ---
+# --- Database (use host Docker PostgreSQL) ---
+database:
+  external:
+    enabled: true
+    url: "postgresql://iorder:iorder_secret@host.minikube.internal:5432/iorder_db"
+
+# --- PostgreSQL (disabled — using external host Docker container) ---
 postgresql:
-  enabled: true
+  enabled: false
   port: 5432
   database: iorder_db
   username: iorder

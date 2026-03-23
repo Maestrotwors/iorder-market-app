@@ -29,6 +29,11 @@ authService:
     minReplicas: 2
     maxReplicas: 5
 
+# External database (optional for staging)
+database:
+  external:
+    enabled: false
+
 postgresql:
   storage:
     size: 5Gi

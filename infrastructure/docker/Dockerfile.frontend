@@ -1,36 +1,14 @@
-# iOrder Market — Frontend (Angular + Nginx)
-# Usage: docker build -f infrastructure/docker/Dockerfile.frontend -t iorder/frontend:latest .
-# Build context must be the monorepo root.
+# iOrder Market — Frontend (Nginx)
+# Usage:
+#   1. Build Angular locally: bun run build:web
+#   2. Build Docker image:    docker build -f infrastructure/docker/Dockerfile.frontend -t iorder/frontend:latest .
+# Build context must be the monorepo root. Expects dist/web/browser/ to exist.
 
-# Stage 1 — Install dependencies (cached unless package.json/bun.lock change)
-FROM oven/bun:1.2-alpine AS deps
-WORKDIR /app
-
-COPY package.json bun.lock ./
-COPY packages/shared-contracts/package.json packages/shared-contracts/
-COPY packages/shared-logic/package.json packages/shared-logic/
-COPY packages/shared-ui/package.json packages/shared-ui/
-
-# Override workspaces to exclude microservices for frontend build
-RUN cat package.json | bun -e 'const p=JSON.parse(await Bun.stdin.text());p.workspaces=["packages/*"];await Bun.write("package.json",JSON.stringify(p,null,2))' && bun install
-
-# Stage 2 — Build Angular (re-runs only when source code changes)
-FROM deps AS build
-WORKDIR /app
-
-COPY tsconfig.base.json angular.json ./
-COPY config/ config/
-COPY packages/ packages/
-COPY frontend/ frontend/
-
-RUN bun run ng build web
-
-# Stage 3 — Nginx
-FROM nginx:1.27-alpine AS release
+FROM nginx:1.27-alpine
 
 RUN rm /etc/nginx/conf.d/default.conf
 COPY infrastructure/docker/nginx-frontend.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /app/dist/web/browser /usr/share/nginx/html
+COPY dist/web/browser/ /usr/share/nginx/html/
 
 EXPOSE 80
 

@@ -32,9 +32,15 @@ authService:
     minReplicas: 3
     maxReplicas: 10
 
+# External database — set url via --set or secrets in CI/CD
+database:
+  external:
+    enabled: true
+    url: ""  # Override via: --set database.external.url=postgresql://...
+
+# Internal PostgreSQL disabled (external DB used in production)
 postgresql:
-  storage:
-    size: 20Gi
+  enabled: false
 
 ingress:
   enabled: true
