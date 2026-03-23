@@ -13,9 +13,7 @@
 ## Структура проекта
 - `frontend/web/`                       — Angular приложение, порт 4200
 - `microservices/`                      — ElysiaJS сервисы на Bun
-- `packages/shared-contracts/`          — API типы, Zod-схемы, эндпоинты (backend + frontend)
-- `packages/shared-logic/`             — бизнес-логика, общая для web и mobile
-- `packages/shared-ui/`               — UI компоненты (input, button, etc.) для web и mobile
+- `packages/shared-contracts/`          — API типы, Zod-схемы, эндпоинты (папка, не библиотека — резолв через tsconfig paths)
 - `database/`                           — Prisma schema и миграции
 - `infrastructure/`                     — Docker, CI/CD, RedPanda
 - `config/`                             — центральный конфиг портов (config/index.ts)

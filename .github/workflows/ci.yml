@@ -31,10 +31,10 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: '1.1.45'
+          bun-version: '1.2'
 
       - name: Install dependencies
-        run: bun install --no-save
+        run: bun install
 
       - name: Generate Prisma client
         run: bun run db:generate
@@ -49,4 +49,4 @@ jobs:
         run: bun run test:web
 
       - name: Build frontend
-        run: bun run ng build web
+        run: bunx ng build web

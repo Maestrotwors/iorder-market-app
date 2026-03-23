@@ -3,7 +3,7 @@
   "workspaces": {
     ".": {
       "entry": ["config/index.ts"],
-      "project": ["config/**/*.ts"],
+      "project": ["config/**/*.ts", "packages/shared-contracts/src/**/*.ts"],
       "ignoreDependencies": [
         "@angular/forms",
         "@angular/platform-browser-dynamic",
@@ -16,9 +16,6 @@
     },
     "frontend/web": {
       "entry": ["src/main.ts"],
-      "project": ["src/**/*.ts"]
-    },
-    "packages/shared-contracts": {
       "project": ["src/**/*.ts"]
     },
     "microservices/api-gateway": {

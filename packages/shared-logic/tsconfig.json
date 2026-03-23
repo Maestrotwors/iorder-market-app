@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/shared-contracts",
+    "outDir": "../../dist/packages/shared-logic",
     "declaration": true
   },
   "include": ["src/**/*.ts"]
