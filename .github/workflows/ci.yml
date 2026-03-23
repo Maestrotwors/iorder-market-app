@@ -12,12 +12,12 @@ jobs:
   install:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.1.45'
       - name: Cache node_modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: cache
         with:
           path: node_modules
@@ -30,11 +30,11 @@ jobs:
     needs: install
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.1.45'
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: node_modules
           key: bun-${{ hashFiles('bun.lockb', '**/package.json') }}
@@ -45,11 +45,11 @@ jobs:
     needs: install
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.1.45'
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: node_modules
           key: bun-${{ hashFiles('bun.lockb', '**/package.json') }}
@@ -59,11 +59,11 @@ jobs:
     needs: install
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.1.45'
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: node_modules
           key: bun-${{ hashFiles('bun.lockb', '**/package.json') }}
@@ -73,11 +73,11 @@ jobs:
     needs: install
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.1.45'
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: node_modules
           key: bun-${{ hashFiles('bun.lockb', '**/package.json') }}
@@ -91,7 +91,7 @@ jobs:
     needs: install
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.1.45'
