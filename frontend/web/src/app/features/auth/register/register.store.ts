@@ -2,7 +2,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { signalStore, withState, withMethods, patchState } from '@ngrx/signals';
 import { AuthService } from '@shared/api/auth.service';
-import { AppStore } from '@store';
+import { AuthStore } from '../auth.store';
 
 export interface RegisterState {
   loading: boolean;
@@ -20,7 +20,7 @@ export const RegisterStore = signalStore(
     (
       store,
       authService = inject(AuthService),
-      appStore = inject(AppStore),
+      authStore = inject(AuthStore),
       router = inject(Router),
     ) => ({
       register(name: string, email: string, password: string): void {
@@ -29,7 +29,7 @@ export const RegisterStore = signalStore(
         authService.register(name, email, password).subscribe({
           next: (res) => {
             patchState(store, { loading: false });
-            appStore.setUser(res.user);
+            authStore.setUser(res.user);
             router.navigateByUrl('/customer');
           },
           error: (err) => {

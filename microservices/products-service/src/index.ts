@@ -16,7 +16,8 @@ if (config.isDev) {
         info: {
           title: 'iOrder Market — Products Service',
           version: '0.0.1',
-          description: 'Microservice for product catalog management: CRUD operations, search, filtering, and pagination.',
+          description:
+            'Microservice for product catalog management: CRUD operations, search, filtering, and pagination.',
         },
         tags: [
           { name: 'Health', description: 'Service health check' },
@@ -31,16 +32,20 @@ if (config.isDev) {
 }
 
 app
-  .get('/health', () => ({
-    status: 'ok',
-    service: 'products-service',
-    timestamp: new Date().toISOString(),
-  }), {
-    detail: {
-      summary: 'Products service health check',
-      tags: ['Health'],
+  .get(
+    '/health',
+    () => ({
+      status: 'ok',
+      service: 'products-service',
+      timestamp: new Date().toISOString(),
+    }),
+    {
+      detail: {
+        summary: 'Products service health check',
+        tags: ['Health'],
+      },
     },
-  })
+  )
   .use(productRoutes)
   .listen(port);
 

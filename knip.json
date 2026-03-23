@@ -24,7 +24,7 @@
     "packages/shared-logic": {
       "project": ["src/**/*.ts"]
     },
-"microservices/api-gateway": {
+    "microservices/api-gateway": {
       "project": ["src/**/*.ts"],
       "ignoreDependencies": ["@elysiajs/eden"]
     },

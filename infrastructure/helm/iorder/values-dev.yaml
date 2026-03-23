@@ -14,10 +14,7 @@ frontend:
     pullPolicy: Never
   serviceType: LoadBalancer
   loadBalancerPort: 30080
-  resources:
-    requests:
-      cpu: "100m"
-      memory: "128Mi"
+  resources: {}
 
 # --- API Gateway ---
 apiGateway:
@@ -26,10 +23,7 @@ apiGateway:
     repository: iorder/api-gateway
     tag: latest
     pullPolicy: Never
-  resources:
-    requests:
-      cpu: "200m"
-      memory: "256Mi"
+  resources: {}
   hpa:
     enabled: false
 
@@ -40,10 +34,7 @@ productsService:
     repository: iorder/products-service
     tag: latest
     pullPolicy: Never
-  resources:
-    requests:
-      cpu: "200m"
-      memory: "256Mi"
+  resources: {}
   hpa:
     enabled: false
 
@@ -54,10 +45,7 @@ authService:
     repository: iorder/auth-service
     tag: latest
     pullPolicy: Never
-  resources:
-    requests:
-      cpu: "200m"
-      memory: "512Mi"
+  resources: {}
   hpa:
     enabled: false
 
@@ -73,20 +61,11 @@ postgresql:
   port: 5432
   database: iorder_db
   username: iorder
-  resources:
-    requests:
-      cpu: "50m"
-      memory: "128Mi"
-    limits:
-      cpu: "200m"
-      memory: "256Mi"
+  resources: {}
 
 # --- RedPanda ---
 redpanda:
-  resources:
-    requests:
-      cpu: "200m"
-      memory: "512Mi"
+  resources: {}
 
 # --- Secrets ---
 secrets:

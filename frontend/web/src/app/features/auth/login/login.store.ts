@@ -2,7 +2,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { signalStore, withState, withMethods, patchState } from '@ngrx/signals';
 import { AuthService } from '@shared/api/auth.service';
-import { AppStore } from '@store';
+import { AuthStore } from '../auth.store';
 
 export interface LoginState {
   loading: boolean;
@@ -26,7 +26,7 @@ export const LoginStore = signalStore(
     (
       store,
       authService = inject(AuthService),
-      appStore = inject(AppStore),
+      authStore = inject(AuthStore),
       router = inject(Router),
     ) => ({
       async login(email: string, password: string): Promise<void> {
@@ -35,9 +35,8 @@ export const LoginStore = signalStore(
         authService.login(email, password).subscribe({
           next: (res) => {
             patchState(store, { loading: false });
-            appStore.setUser(res.user);
+            authStore.setUser(res.user);
             const route = ROLE_ROUTE_MAP[res.user.role] ?? '/customer';
-            // Use setTimeout to ensure state is flushed before navigation
             setTimeout(() => router.navigateByUrl(route));
           },
           error: (err) => {

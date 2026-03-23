@@ -10,9 +10,7 @@ export const routes: Routes = [
       {
         path: '',
         loadComponent: () =>
-          import('./pages/landing/home/landing-home.component').then(
-            (m) => m.LandingHomeComponent,
-          ),
+          import('./pages/landing/home/landing-home.component').then((m) => m.LandingHomeComponent),
       },
       {
         path: 'login',

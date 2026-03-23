@@ -1,24 +1,23 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { AppStore } from '@store';
+import { AuthStore } from '@features/auth/auth.store';
 import { AuthService } from '@shared/api/auth.service';
 import { map } from 'rxjs';
 
 export function roleGuard(allowedRole: string): CanActivateFn {
   return () => {
-    const appStore = inject(AppStore);
+    const authStore = inject(AuthStore);
     const authService = inject(AuthService);
     const router = inject(Router);
 
-    if (appStore.initialized()) {
-      return appStore.userRole() === allowedRole || router.createUrlTree(['/login']);
+    if (authStore.initialized()) {
+      return authStore.userRole() === allowedRole || router.createUrlTree(['/login']);
     }
 
-    // Session not yet restored — fetch it, update store, then check
     return authService.getSession().pipe(
       map((session) => {
         if (session?.user) {
-          appStore.setUser(session.user);
+          authStore.setUser(session.user);
         }
 
         if (session?.user.role === allowedRole) return true;

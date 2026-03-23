@@ -25,13 +25,44 @@ export const config: SheriffConfig = {
     'microservices/auth-service': ['layer:service'],
   },
   depRules: {
-    root: ['layer:page', 'layer:widget', 'layer:feature', 'layer:schemas', 'layer:shared-local', 'layer:store', 'layer:ui', 'type:shared', 'noTag'],
+    root: [
+      'layer:page',
+      'layer:widget',
+      'layer:feature',
+      'layer:schemas',
+      'layer:shared-local',
+      'layer:store',
+      'layer:ui',
+      'type:shared',
+      'noTag',
+    ],
     noTag: ['noTag', 'type:shared'],
 
     // FSD: each layer can only import lower layers (top → bottom)
-    'layer:page': ['layer:widget', 'layer:feature', 'layer:schemas', 'layer:shared-local', 'layer:store', 'layer:ui', 'type:shared'],
-    'layer:widget': ['layer:feature', 'layer:schemas', 'layer:shared-local', 'layer:store', 'layer:ui', 'type:shared'],
-    'layer:feature': ['layer:schemas', 'layer:shared-local', 'layer:store', 'layer:ui', 'type:shared'],
+    'layer:page': [
+      'layer:widget',
+      'layer:feature',
+      'layer:schemas',
+      'layer:shared-local',
+      'layer:store',
+      'layer:ui',
+      'type:shared',
+    ],
+    'layer:widget': [
+      'layer:feature',
+      'layer:schemas',
+      'layer:shared-local',
+      'layer:store',
+      'layer:ui',
+      'type:shared',
+    ],
+    'layer:feature': [
+      'layer:schemas',
+      'layer:shared-local',
+      'layer:store',
+      'layer:ui',
+      'type:shared',
+    ],
     'layer:shared-local': ['layer:store', 'type:shared'],
 
     // Schemas layer — frontend-only Zod schemas
