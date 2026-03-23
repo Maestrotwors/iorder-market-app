@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Argo CD setup script for iOrder Market
-# Installs Argo CD, applies the Application manifest, and starts port-forward.
+# Installs Argo CD, applies Application, runs stable port-forward with auto-restart.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -8,59 +8,87 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 ARGOCD_NAMESPACE="argocd"
 PORT=8443
 
+cleanup() {
+  echo ""
+  echo "[INFO] Shutting down..."
+  kill "$PF_PID" 2>/dev/null || true
+  exit 0
+}
+trap cleanup SIGINT SIGTERM
+
 echo "=== iOrder Market — Argo CD Setup ==="
 
-# 1. Install Argo CD if not already installed
+# 1. Ensure minikube is running
+if ! minikube status | grep -q "apiserver: Running"; then
+  echo "[INFO] Starting minikube..."
+  minikube start
+fi
+
+# 2. Install Argo CD if not installed
 if kubectl get namespace "$ARGOCD_NAMESPACE" &>/dev/null; then
-  echo "[INFO] Namespace '$ARGOCD_NAMESPACE' already exists, skipping install."
+  echo "[OK] Argo CD namespace exists."
 else
-  echo "[INFO] Creating namespace '$ARGOCD_NAMESPACE' and installing Argo CD..."
+  echo "[INFO] Installing Argo CD..."
   kubectl create namespace "$ARGOCD_NAMESPACE"
   kubectl apply -n "$ARGOCD_NAMESPACE" \
     -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-  echo "[INFO] Argo CD manifests applied."
 fi
 
-# 2. Wait for Argo CD pods to be ready
-echo "[INFO] Waiting for Argo CD pods to be ready (timeout 300s)..."
+# 3. Wait for pods
+echo "[INFO] Waiting for Argo CD pods..."
 kubectl wait --for=condition=ready pod \
   -l app.kubernetes.io/part-of=argocd \
   -n "$ARGOCD_NAMESPACE" \
   --timeout=300s
-echo "[INFO] All Argo CD pods are ready."
+echo "[OK] Argo CD pods ready."
 
-# 3. Apply the iOrder Application manifest
-echo "[INFO] Applying iOrder Application manifest..."
+# 4. Set polling interval to 30s
+kubectl patch configmap argocd-cm -n "$ARGOCD_NAMESPACE" \
+  --type merge -p '{"data":{"timeout.reconciliation":"30s"}}' 2>/dev/null || true
+
+# 5. Apply application manifest
 kubectl apply -f "$PROJECT_ROOT/infrastructure/argocd/application.yaml"
-echo "[INFO] Application 'iorder-market' created."
+echo "[OK] Application 'iorder-market' applied."
 
-# 4. Start port-forward to argocd-server
-echo "[INFO] Starting port-forward on localhost:${PORT} -> argocd-server:443..."
-kubectl port-forward svc/argocd-server -n "$ARGOCD_NAMESPACE" "${PORT}:443" &
-PF_PID=$!
-
-# Give port-forward a moment to establish
-sleep 2
-
-if kill -0 "$PF_PID" 2>/dev/null; then
-  echo "[INFO] Port-forward running (PID: $PF_PID)."
-else
-  echo "[ERROR] Port-forward failed to start."
-  exit 1
-fi
-
-# 5. Print admin password and URL
+# 6. Print credentials
 ADMIN_PASSWORD=$(kubectl -n "$ARGOCD_NAMESPACE" get secret argocd-initial-admin-secret \
-  -o jsonpath="{.data.password}" | base64 -d 2>/dev/null || echo "<secret not found>")
+  -o jsonpath="{.data.password}" | base64 -d 2>/dev/null || echo "<not found>")
 
 echo ""
 echo "========================================"
-echo "  Argo CD is ready"
-echo "========================================"
+echo "  Argo CD ready"
 echo "  URL:      https://localhost:${PORT}"
-echo "  Username: admin"
+echo "  Login:    admin"
 echo "  Password: ${ADMIN_PASSWORD}"
 echo "========================================"
 echo ""
-echo "Sync is MANUAL — open the UI and click 'Sync' on 'iorder-market'."
-echo "To stop port-forward: kill $PF_PID"
+
+# 7. Stable port-forward with auto-restart
+echo "[INFO] Starting port-forward (auto-restarts on failure)..."
+echo "[INFO] Press Ctrl+C to stop."
+
+while true; do
+  kubectl port-forward svc/argocd-server -n "$ARGOCD_NAMESPACE" "${PORT}:443" 2>/dev/null &
+  PF_PID=$!
+
+  # Wait for port-forward to die
+  wait "$PF_PID" 2>/dev/null || true
+
+  echo "[WARN] Port-forward dropped, restarting in 3s..."
+  sleep 3
+
+  # Check minikube is still alive
+  if ! kubectl cluster-info &>/dev/null; then
+    echo "[WARN] Cluster unreachable, waiting for recovery..."
+    while ! kubectl cluster-info &>/dev/null; do
+      sleep 5
+    done
+    echo "[OK] Cluster back online."
+
+    # Wait for argocd pods after recovery
+    kubectl wait --for=condition=ready pod \
+      -l app.kubernetes.io/part-of=argocd \
+      -n "$ARGOCD_NAMESPACE" \
+      --timeout=300s 2>/dev/null || true
+  fi
+done

@@ -42,7 +42,9 @@
     "k8s:pods": "kubectl get pods -o wide",
     "k8s:logs": "kubectl logs -l app.kubernetes.io/part-of=iorder-market --tail=50",
     "k8s:forward": "kubectl port-forward svc/iorder-api-gateway 30080:3000",
-    "k8s:stop": "helm uninstall iorder; pkill -f 'port-forward.*iorder' || true"
+    "k8s:stop": "helm uninstall iorder; pkill -f 'port-forward.*iorder' || true",
+    "argocd": "bash scripts/argocd-setup.sh",
+    "argocd:watch": "bash scripts/argocd-watch.sh"
   },
   "dependencies": {
     "@angular/animations": "^21.2.5",
