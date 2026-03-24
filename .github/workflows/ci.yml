@@ -98,10 +98,10 @@ jobs:
       - run: bun audit || true
 
   # ---------------------------------------------------------------------------
-  # E2E — spin up all services in Docker Compose, run Playwright API tests
+  # E2E — build all services in Docker, run Playwright frontend tests
   # ---------------------------------------------------------------------------
   e2e:
-    needs: [build-backend]
+    needs: [build-frontend, build-backend]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -109,20 +109,20 @@ jobs:
       - name: Build and start services
         run: |
           docker compose -f infrastructure/docker/docker-compose.test.yml up -d --build --wait
-        timeout-minutes: 5
+        timeout-minutes: 10
 
-      - name: Wait for API Gateway
+      - name: Wait for frontend
         run: |
           for i in $(seq 1 30); do
-            if curl -s http://localhost:3000/api/health | grep -q '"ok"'; then
-              echo "API Gateway is ready"
+            if curl -sf http://localhost:4200/ > /dev/null 2>&1; then
+              echo "Frontend is ready"
               exit 0
             fi
-            echo "Waiting for API Gateway... ($i/30)"
-            sleep 2
+            echo "Waiting for frontend... ($i/30)"
+            sleep 3
           done
-          echo "API Gateway failed to start"
-          docker compose -f infrastructure/docker/docker-compose.test.yml logs
+          echo "Frontend failed to start"
+          docker compose -f infrastructure/docker/docker-compose.test.yml logs frontend
           exit 1
 
       - uses: oven-sh/setup-bun@v2
@@ -135,12 +135,23 @@ jobs:
       - name: Install Playwright browsers
         run: bunx playwright install chromium --with-deps
 
-      - name: Run E2E API tests
+      - name: Run E2E frontend tests
         run: bunx playwright test --config=e2e/playwright.config.ts
         env:
-          API_ONLY: 'true'
-          API_URL: 'http://localhost:3000'
           CI: 'true'
+
+      - name: Run API integration tests
+        run: bun run test:api
+        env:
+          API_URL: 'http://localhost:3000'
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          retention-days: 7
 
       - name: Show service logs on failure
         if: failure()

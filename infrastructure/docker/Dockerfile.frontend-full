@@ -6,10 +6,10 @@
 FROM oven/bun:1.2-alpine AS deps
 WORKDIR /app
 
-COPY package.json bun.lock ./
+COPY package.json bun.lockb ./
 COPY packages/shared-contracts/package.json packages/shared-contracts/
 COPY packages/shared-logic/package.json packages/shared-logic/
-COPY packages/shared-ui/package.json packages/shared-ui/
+COPY packages/shared-observability/package.json packages/shared-observability/
 
 RUN cat package.json | bun -e 'const p=JSON.parse(await Bun.stdin.text());p.workspaces=["packages/*"];await Bun.write("package.json",JSON.stringify(p,null,2))' && bun install
 
