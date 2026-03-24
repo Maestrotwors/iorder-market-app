@@ -1,0 +1,21 @@
+# Playwright E2E test runner for Docker
+# Runs inside docker-compose.test.yml network — connects to frontend:80
+FROM mcr.microsoft.com/playwright:v1.52.0-noble
+
+WORKDIR /app
+
+# Install only Playwright test dependency
+RUN npm init -y && npm install --ignore-scripts @playwright/test && \
+    npx playwright install --with-deps chromium
+
+# Copy E2E tests and fixtures
+COPY e2e/playwright.config.ts e2e/
+COPY e2e/smoke.e2e.ts e2e/
+COPY e2e/fixtures/ e2e/fixtures/
+COPY e2e/pages/ e2e/pages/
+
+# Override baseURL for Docker network (frontend service on port 80)
+ENV PLAYWRIGHT_BASE_URL=http://frontend:80
+ENV CI=true
+
+CMD ["npx", "playwright", "test", "--config", "e2e/playwright.config.ts"]
