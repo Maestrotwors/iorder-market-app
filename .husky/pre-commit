@@ -1,0 +1,12 @@
+# 1. Prettier + ESLint on staged files only (fast)
+bunx lint-staged
+
+# 2. Knip — unused exports/deps check (whole project, ~2-5s)
+bun run knip
+
+# 3. TypeScript type-check (catches broken types, ~3-5s)
+bunx tsc --noEmit -p microservices/api-gateway/tsconfig.json &
+bunx tsc --noEmit -p microservices/products-service/tsconfig.json &
+bunx tsc --noEmit -p microservices/auth-service/tsconfig.json &
+bunx tsc --noEmit -p packages/shared-observability/tsconfig.json &
+wait

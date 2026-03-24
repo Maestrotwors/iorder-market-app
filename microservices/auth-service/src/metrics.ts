@@ -5,14 +5,14 @@ const register = new Registry();
 
 collectDefaultMetrics({ register });
 
-export const httpRequestsTotal = new Counter({
+const httpRequestsTotal = new Counter({
   name: 'http_requests_total',
   help: 'Total number of HTTP requests',
   labelNames: ['method', 'path', 'status_code'] as const,
   registers: [register],
 });
 
-export const httpRequestDuration = new Histogram({
+const httpRequestDuration = new Histogram({
   name: 'http_request_duration_seconds',
   help: 'HTTP request duration in seconds',
   labelNames: ['method', 'path', 'status_code'] as const,

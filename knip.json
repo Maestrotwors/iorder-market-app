@@ -3,32 +3,40 @@
   "workspaces": {
     ".": {
       "entry": ["config/index.ts"],
-      "project": ["config/**/*.ts", "packages/shared-contracts/src/**/*.ts"],
+      "project": ["config/**/*.ts"],
       "ignoreDependencies": [
         "@angular/forms",
         "@angular/platform-browser-dynamic",
         "@angular/router",
         "rxjs",
         "angular-eslint",
-        "@ngrx/signals"
+        "@ngrx/signals",
+        "@analogjs/vitest-angular"
       ],
-      "ignoreBinaries": ["docker-compose"]
+      "ignoreBinaries": ["kubectl", "helm", "pkill", "husky"]
     },
     "frontend/web": {
       "entry": ["src/main.ts"],
       "project": ["src/**/*.ts"]
     },
+    "packages/shared-contracts": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/shared-observability": {
+      "project": ["src/**/*.ts"]
+    },
     "microservices/api-gateway": {
       "project": ["src/**/*.ts"],
-      "ignoreDependencies": ["@elysiajs/eden"]
+      "ignoreDependencies": ["@elysiajs/eden", "@elysiajs/openapi"]
     },
     "microservices/products-service": {
       "project": ["src/**/*.ts"],
       "ignoreDependencies": ["@elysiajs/cors", "@prisma/client", "prisma"]
     },
     "microservices/auth-service": {
-      "project": ["src/**/*.ts"]
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": ["jose"]
     }
   },
-  "exclude": ["enumMembers"]
+  "exclude": ["enumMembers", "unlisted", "unresolved"]
 }
