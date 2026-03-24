@@ -1,20 +1,33 @@
 import { Elysia } from 'elysia';
+import { trace, SpanKind, SpanStatusCode, type Context as OtelContext } from '@opentelemetry/api';
 import { serviceUrl } from '../../../../config';
+import { injectTraceContext } from '@iorder/shared-observability';
 import { authMiddleware, type AuthUser } from '../middleware/auth';
 
 const PRODUCTS_URL = serviceUrl('products');
 const AUTH_URL = serviceUrl('auth');
 
+const proxyTracer = trace.getTracer('api-gateway-proxy');
+
 /**
  * Generic passthrough proxy — forwards request as-is to the target service.
  * For authenticated routes, injects X-User-* headers so microservices
  * can identify the caller without their own auth logic.
+ * Propagates W3C trace context (traceparent) to downstream services.
  *
  * @param stripApi - if true, strips /api prefix (default: true).
  *   Set to false for services that expect /api/* paths (e.g. Better Auth with basePath: '/api/auth').
  */
 function proxyPass(targetBaseUrl: string, { stripApi = true } = {}) {
-  return async ({ request, user }: { request: Request; user?: AuthUser }) => {
+  return async ({
+    request,
+    user,
+    store,
+  }: {
+    request: Request;
+    user?: AuthUser;
+    store: Record<string, unknown>;
+  }) => {
     const url = new URL(request.url);
     const path = stripApi ? url.pathname.replace(/^\/api/, '') : url.pathname;
     const targetUrl = `${targetBaseUrl}${path}${url.search}`;
@@ -32,12 +45,35 @@ function proxyPass(targetBaseUrl: string, { stripApi = true } = {}) {
     // Strip auth headers — microservices trust X-User-* from gateway only
     headers.delete('authorization');
 
+    // Propagate trace context to downstream service
+    const parentOtelContext = store.__otelContext as OtelContext | undefined;
+    const proxySpan = parentOtelContext
+      ? proxyTracer.startSpan(
+          `proxy ${request.method} ${path}`,
+          { kind: SpanKind.CLIENT, attributes: { 'http.url': targetUrl } },
+          parentOtelContext,
+        )
+      : null;
+
+    if (proxySpan && parentOtelContext) {
+      const outgoingCtx = trace.setSpan(parentOtelContext, proxySpan);
+      injectTraceContext(outgoingCtx, headers);
+    }
+
     const res = await fetch(targetUrl, {
       method: request.method,
       headers,
       body: hasBody ? request.body : undefined,
       duplex: 'half',
     });
+
+    if (proxySpan) {
+      proxySpan.setAttributes({ 'http.status_code': res.status });
+      if (res.status >= 500) {
+        proxySpan.setStatus({ code: SpanStatusCode.ERROR });
+      }
+      proxySpan.end();
+    }
 
     return new Response(res.body, {
       status: res.status,

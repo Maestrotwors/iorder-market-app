@@ -18,5 +18,7 @@ data:
   REDPANDA_BROKERS: {{ include "iorder.redpandaBrokers" . | quote }}
   # JWT
   JWT_EXPIRATION: "3600"
+  # OpenTelemetry
+  OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.observability.otlpEndpoint | quote }}
   # Environment
   NODE_ENV: {{ .Values.global.environment | quote }}

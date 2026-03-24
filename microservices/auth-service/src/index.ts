@@ -1,7 +1,17 @@
 import { Elysia } from 'elysia';
 import { openapi } from '@elysiajs/openapi';
 import { config } from '../../../config';
+import { initTracer, observabilityPlugin } from '@iorder/shared-observability';
 import { auth } from './auth';
+import { metricsPlugin } from './metrics';
+
+const SERVICE_NAME = 'auth-service';
+
+initTracer({
+  serviceName: SERVICE_NAME,
+  otlpEndpoint: config.observability.otlpEndpoint,
+  isDev: config.isDev,
+});
 
 const { port } = config.services.auth;
 
@@ -28,6 +38,8 @@ if (config.isDev) {
 }
 
 app
+  .use(metricsPlugin)
+  .use(observabilityPlugin({ serviceName: SERVICE_NAME }))
   .get(
     '/health',
     () => ({

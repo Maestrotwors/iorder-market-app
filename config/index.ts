@@ -67,6 +67,12 @@ export const config = {
     expiration: envNum('JWT_EXPIRATION') ?? 3600,
   },
 
+  observability: {
+    otlpEndpoint:
+      env('OTEL_EXPORTER_OTLP_ENDPOINT') ??
+      (isContainerized ? 'http://tempo.monitoring:4318' : 'http://localhost:4318'),
+  },
+
   isDev: (env('NODE_ENV') ?? 'development') !== 'production',
 
   cors: {
