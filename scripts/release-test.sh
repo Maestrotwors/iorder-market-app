@@ -36,7 +36,7 @@ LATEST_RC=$(git tag -l "v${VERSION}-rc.*" | sort -V | tail -1)
 if [[ -z "$LATEST_RC" ]]; then
   NEXT_RC=1
 else
-  CURRENT_RC=$(echo "$LATEST_RC" | grep -oP 'rc\.\K[0-9]+')
+  CURRENT_RC=$(echo "$LATEST_RC" | sed 's/.*rc\.//')
   NEXT_RC=$((CURRENT_RC + 1))
 fi
 
