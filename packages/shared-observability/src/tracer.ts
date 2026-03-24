@@ -6,10 +6,7 @@ import {
 } from '@opentelemetry/sdk-trace-base';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { resourceFromAttributes } from '@opentelemetry/resources';
-import {
-  ATTR_SERVICE_NAME,
-  ATTR_SERVICE_VERSION,
-} from '@opentelemetry/semantic-conventions';
+import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 export interface TracerConfig {
   serviceName: string;
@@ -26,9 +23,7 @@ export function initTracer(config: TracerConfig): BasicTracerProvider {
   if (provider) return provider;
 
   const endpoint =
-    config.otlpEndpoint ??
-    process.env.OTEL_EXPORTER_OTLP_ENDPOINT ??
-    'http://localhost:4318';
+    config.otlpEndpoint ?? process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://localhost:4318';
 
   const resource = resourceFromAttributes({
     [ATTR_SERVICE_NAME]: config.serviceName,
