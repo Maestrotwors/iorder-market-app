@@ -9,6 +9,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/Maestrotwors/iorder-market-app.git
+    # Track the latest RC tag — updated by argocd-watch.sh or manually
     targetRevision: main
     path: infrastructure/helm/iorder
     helm:

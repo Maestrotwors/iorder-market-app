@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
-# Watches main branch, rebuilds Docker images, Argo CD handles the rest.
+# Watches RC tags, rebuilds Docker images, Argo CD handles the rest.
 # Usage: bun run argocd:watch
+#
+# Workflow:
+#   1. Run `bun run release:test` to create an RC tag and push it
+#   2. This script detects the new tag and rebuilds images locally
+#   3. ArgoCD syncs the Helm chart and rolls out new pods
 set -euo pipefail
 
 BACKEND_SERVICES=("api-gateway" "products-service" "auth-service")
 DOCKERFILE_BACKEND="infrastructure/docker/Dockerfile.microservice"
 DOCKERFILE_FRONTEND="infrastructure/docker/Dockerfile.frontend"
 POLL_INTERVAL=30
-LAST_COMMIT=""
+LAST_TAG=""
 
 ensure_minikube() {
   if ! minikube status 2>/dev/null | grep -q "apiserver: Running"; then
@@ -31,16 +36,20 @@ wait_for_pods() {
   done
 }
 
-build_and_restart() {
-  local COMMIT=$1
+get_latest_rc_tag() {
+  git fetch origin --tags --quiet 2>/dev/null || true
+  git tag -l "v*-rc.*" | sort -V | tail -1
+}
+
+build_and_deploy() {
+  local TAG=$1
   echo ""
-  echo "[$(date +%H:%M:%S)] New commit: ${COMMIT:0:7}"
+  echo "[$(date +%H:%M:%S)] New RC tag: ${TAG}"
 
-  # Pull latest
-  git checkout main --quiet
-  git pull origin main --quiet
+  # Checkout the tagged commit
+  git checkout "$TAG" --quiet 2>/dev/null
 
-  # Ensure minikube & tunnel are alive after pull
+  # Ensure minikube & tunnel are alive
   ensure_minikube
   eval $(minikube docker-env)
   ensure_tunnel
@@ -50,55 +59,55 @@ build_and_restart() {
   bun run ng build web 2>&1 | tail -1
 
   echo "[BUILD] Frontend Docker image..."
-  docker build -f "$DOCKERFILE_FRONTEND" -t "iorder/frontend:latest" . --quiet
+  docker build -f "$DOCKERFILE_FRONTEND" -t "iorder/frontend:latest" -t "iorder/frontend:${TAG}" . --quiet
 
   # Build backend services in parallel
   for SERVICE in "${BACKEND_SERVICES[@]}"; do
     echo "[BUILD] $SERVICE..."
     docker build -f "$DOCKERFILE_BACKEND" --build-arg SERVICE="$SERVICE" \
-      -t "iorder/${SERVICE}:latest" . --quiet &
+      -t "iorder/${SERVICE}:latest" -t "iorder/${SERVICE}:${TAG}" . --quiet &
   done
   wait
 
-  # Restart all deployments
+  # Restart all deployments to pick up new images
   echo "[DEPLOY] Rolling restart..."
   kubectl rollout restart deployment -l app.kubernetes.io/instance=iorder-market 2>/dev/null || true
 
   wait_for_pods
 
-  echo "[OK] Deploy complete: ${COMMIT:0:7}"
+  # Return to main
+  git checkout main --quiet 2>/dev/null
+
+  echo "[OK] Deploy complete: ${TAG}"
   echo ""
 }
 
 # --- Startup ---
-echo "=== iOrder — Auto-deploy watcher ==="
+echo "=== iOrder — RC Tag Deploy Watcher ==="
 
 ensure_minikube
 eval $(minikube docker-env)
 ensure_tunnel
 
-echo "Watching 'main' branch every ${POLL_INTERVAL}s..."
+echo "Watching for new RC tags (v*-rc.*) every ${POLL_INTERVAL}s..."
+echo "Create a tag with: bun run release:test"
 echo "Press Ctrl+C to stop."
 echo ""
 
 # --- Main loop ---
 while true; do
-  # Fetch latest from remote
-  git fetch origin main --quiet 2>/dev/null || true
+  LATEST_TAG=$(get_latest_rc_tag)
 
-  REMOTE_COMMIT=$(git rev-parse origin/main 2>/dev/null)
-
-  if [[ -n "$REMOTE_COMMIT" && "$REMOTE_COMMIT" != "$LAST_COMMIT" ]]; then
-    if [[ -n "$LAST_COMMIT" ]]; then
-      build_and_restart "$REMOTE_COMMIT"
+  if [[ -n "$LATEST_TAG" && "$LATEST_TAG" != "$LAST_TAG" ]]; then
+    if [[ -n "$LAST_TAG" ]]; then
+      build_and_deploy "$LATEST_TAG"
     else
-      echo "[INFO] Current main: ${REMOTE_COMMIT:0:7}"
-      # Ensure everything is healthy on first run
+      echo "[INFO] Current latest RC: ${LATEST_TAG}"
       ensure_tunnel
       wait_for_pods
       echo "[OK] All pods ready."
     fi
-    LAST_COMMIT="$REMOTE_COMMIT"
+    LAST_TAG="$LATEST_TAG"
   fi
 
   # Keep tunnel alive between polls
