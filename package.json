@@ -53,6 +53,8 @@
     "k8s:logs": "kubectl logs -l app.kubernetes.io/part-of=iorder-market --tail=50",
     "k8s:forward": "kubectl port-forward svc/iorder-market-api-gateway 30080:3000",
     "k8s:stop": "helm uninstall iorder-market; pkill -f 'port-forward.*iorder' || true",
+    "release:test": "bash scripts/release-test.sh",
+    "release:prod": "bash scripts/release-prod.sh",
     "argocd": "bash scripts/argocd-setup.sh",
     "argocd:watch": "bash scripts/argocd-watch.sh",
     "monitoring": "bash scripts/monitoring-setup.sh",

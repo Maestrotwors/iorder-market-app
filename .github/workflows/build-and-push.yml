@@ -1,8 +1,15 @@
 name: Build and Push Docker Images
 
+# Only build images on main push (for latest dev images)
+# Release images are built by deploy-test.yml and deploy-production.yml
 on:
   push:
     branches: [main]
+    # Don't run when release-please updates version files
+    paths-ignore:
+      - 'CHANGELOG.md'
+      - 'package.json'
+      - '.release-please-manifest.json'
 
 env:
   REGISTRY: ghcr.io
@@ -44,7 +51,7 @@ jobs:
           push: true
           tags: |
             ${{ env.IMAGE_PREFIX }}/iorder-${{ matrix.service }}:${{ github.sha }}
-            ${{ env.IMAGE_PREFIX }}/iorder-${{ matrix.service }}:latest
+            ${{ env.IMAGE_PREFIX }}/iorder-${{ matrix.service }}:dev-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -86,6 +93,6 @@ jobs:
           push: true
           tags: |
             ${{ env.IMAGE_PREFIX }}/iorder-frontend:${{ github.sha }}
-            ${{ env.IMAGE_PREFIX }}/iorder-frontend:latest
+            ${{ env.IMAGE_PREFIX }}/iorder-frontend:dev-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
