@@ -8,7 +8,7 @@ import {
   type Span,
   type Context as OtelContext,
 } from '@opentelemetry/api';
-import { createLogger, type Logger } from './logger';
+import { createLogger } from './logger';
 
 export interface ObservabilityPluginConfig {
   serviceName: string;
@@ -151,5 +151,3 @@ export function observabilityPlugin(config: ObservabilityPluginConfig) {
 export function injectTraceContext(otelContext: OtelContext, headers: Headers): void {
   propagation.inject(otelContext, headers, headerSetter);
 }
-
-export type { Logger };

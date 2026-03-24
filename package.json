@@ -47,7 +47,8 @@
     "argocd:watch": "bash scripts/argocd-watch.sh",
     "monitoring": "bash scripts/monitoring-setup.sh",
     "monitoring:grafana": "kubectl port-forward svc/prometheus-stack-grafana -n monitoring 3100:80",
-    "observability": "bash scripts/observability-setup.sh"
+    "observability": "bash scripts/observability-setup.sh",
+    "prepare": "husky"
   },
   "dependencies": {
     "@angular/animations": "^21.2.5",
@@ -85,6 +86,10 @@
     "typescript-eslint": "^8.57.1",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.1"
+  },
+  "lint-staged": {
+    "*.{ts,html,scss,json}": "prettier --write",
+    "*.ts": "eslint --fix"
   },
   "engines": {
     "node": ">=22.0.0",
