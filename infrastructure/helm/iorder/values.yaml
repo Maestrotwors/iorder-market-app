@@ -120,3 +120,11 @@ pdb:
     minAvailable: 2
   authService:
     minAvailable: 2
+
+# --- Monitoring ---
+monitoring:
+  enabled: false
+
+# --- Observability (Loki + Tempo) ---
+observability:
+  otlpEndpoint: "http://tempo.monitoring:4318"

@@ -1,8 +1,18 @@
 import { Elysia } from 'elysia';
 import { openapi } from '@elysiajs/openapi';
 import { config } from '../../../config';
+import { initTracer, observabilityPlugin } from '@iorder/shared-observability';
 import { productRoutes } from './routes/products';
+import { metricsPlugin } from './metrics';
 import * as z from 'zod';
+
+const SERVICE_NAME = 'products-service';
+
+initTracer({
+  serviceName: SERVICE_NAME,
+  otlpEndpoint: config.observability.otlpEndpoint,
+  isDev: config.isDev,
+});
 
 const { port } = config.services.products;
 
@@ -32,6 +42,8 @@ if (config.isDev) {
 }
 
 app
+  .use(metricsPlugin)
+  .use(observabilityPlugin({ serviceName: SERVICE_NAME }))
   .get(
     '/health',
     () => ({

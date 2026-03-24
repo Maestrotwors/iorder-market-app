@@ -86,3 +86,11 @@ networkPolicies:
 # --- PDB ---
 pdb:
   enabled: false
+
+# --- Monitoring ---
+monitoring:
+  enabled: true
+
+# --- Observability (Loki + Tempo) ---
+observability:
+  otlpEndpoint: "http://tempo.monitoring:4318"
