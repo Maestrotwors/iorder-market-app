@@ -17,14 +17,91 @@ You are an expert in TypeScript, Angular 21+, SCSS, RxJS, NgRx Signal Store, and
 
 ## Технологический стек
 
-- Angular 21 (signals, standalone components, new control flow, zoneless)
+- Angular 21.2 (signals, standalone components, new control flow, zoneless)
 - SCSS для стилей (inline styles в single-file components)
+- Vite + @analogjs/vite-plugin-angular для билда
 - SSE для real-time обновлений (покупатель/поставщик)
 - WebSockets для админки
 - RxJS для реактивных потоков
 - NgRx Signal Store для state management
 - Signal Forms для форм
 - Ionic (будущее) — учитывай совместимость компонентов
+
+---
+
+## Текущее состояние приложения
+
+### Реализовано
+- Auth flow (login, register, session management) через Better Auth
+- Role-based routing (customer, supplier, admin) с roleGuard
+- Global stores: AuthStore (user, isAuthenticated, userRole), AppStore (theme, initialized)
+- Feature stores: LoginStore, RegisterStore (local, component-scoped)
+- UI компоненты: UiButtonComponent (variants, sizes, loading), UiInputComponent (label, error)
+- Auth guard (roleGuard) — проверяет роль через AuthStore
+- Auth service (login, register, logout, getSession) — cookie-based, withCredentials
+
+### Готово к разработке (stubs/empty)
+- Customer dashboard (pages/customer/ — stub)
+- Supplier dashboard (pages/supplier/ — stub)
+- Admin dashboard (pages/admin/ — stub)
+- Widgets layer (пусто)
+- Entities layer (пусто)
+- Product catalog, cart, orders — ещё не реализованы
+- SSE/WebSocket интеграция — ещё не реализована
+
+### Структура приложения
+
+```
+frontend/web/src/app/
+├── pages/                    # Lazy-loaded routes
+│   ├── landing/              # Лендинг + home
+│   │   ├── landing.component.ts  # Layout (<router-outlet/>)
+│   │   └── home/landing-home.component.ts  # Hero page
+│   ├── customer/customer.component.ts  # Stub
+│   ├── supplier/supplier.component.ts  # Stub
+│   └── admin/admin.component.ts        # Stub
+│
+├── widgets/                  # Составные UI-блоки (пусто)
+│
+├── features/                 # Действия пользователя + store
+│   └── auth/
+│       ├── auth.store.ts     # Global: user, isAuthenticated, userRole, userName
+│       ├── login/
+│       │   ├── login.component.ts   # Inline template/styles, FormsModule (ngModel)
+│       │   └── login.store.ts       # Local: loading, error, login()
+│       └── register/
+│           ├── register.component.ts # Inline template/styles, FormsModule (ngModel)
+│           └── register.store.ts     # Local: loading, error, register()
+│
+├── shared/
+│   ├── api/auth.service.ts   # login, register, logout, getSession (cookie-based)
+│   ├── guards/auth.guard.ts  # roleGuard(allowedRole: string)
+│   └── types/auth.types.ts   # BetterAuthUser, SessionResponse, SignUpResponse
+│
+├── store/app.store.ts        # Global: theme, initialized, toggleTheme()
+│
+├── ui/                       # Локальные UI компоненты
+│   ├── button/button.component.ts  # CSS var theming, variants, loading
+│   └── input/input.component.ts    # CSS var theming, label, error
+│
+├── schemas/                  # Frontend-only Zod (пусто)
+│
+├── app.config.ts             # provideZonelessChangeDetection, provideRouter, provideHttpClient(withFetch())
+├── app.routes.ts             # / (landing), /customer, /supplier, /admin с roleGuard
+└── app.ts                    # Root component (nav + router-outlet)
+```
+
+### Path aliases (tsconfig.json)
+```
+@iorder/shared-contracts → packages/shared-contracts/src/index.ts
+@pages    → frontend/web/src/app/pages/index.ts
+@features → frontend/web/src/app/features/index.ts
+@widgets  → frontend/web/src/app/widgets/index.ts
+@shared   → frontend/web/src/app/shared/index.ts
+@store    → frontend/web/src/app/store/index.ts
+@ui       → frontend/web/src/app/ui/index.ts
+@schemas  → frontend/web/src/app/schemas/index.ts
+```
 
 ---
 
@@ -83,7 +160,7 @@ import { form, FormField } from '@angular/forms/signals';
 loginModel = signal({ email: '', password: '' });
 loginForm = form(this.loginModel);
 
-// Template: <input [formField]="loginForm.email" />
+// Template: <input [formField]="loginForm.controls.email" />
 ```
 
 ### NgRx Signal Store (State Management)
@@ -97,25 +174,6 @@ loginForm = form(this.loginModel);
 - Use `rxMethod()` from `@ngrx/signals/rxjs-interop` for RxJS-based side effects.
 - Keep all derivation logic in `withComputed()` — not in components.
 - Components must be maximally simple — only `inject(Store)`, read data, call store methods.
-
-```typescript
-import { signalStore, withState, withMethods, withComputed, patchState } from '@ngrx/signals';
-
-export const AuthStore = signalStore(
-  { providedIn: 'root' },
-  withState({ user: null as User | null, loading: false }),
-  withComputed((store) => ({
-    isAuthenticated: computed(() => !!store.user()),
-    userRole: computed(() => store.user()?.role ?? null),
-  })),
-  withMethods((store, http = inject(HttpClient)) => ({
-    async login(email: string, password: string) {
-      patchState(store, { loading: true });
-      // ...
-    },
-  })),
-);
-```
 
 ### RxJS Patterns
 
@@ -149,18 +207,10 @@ export const AuthStore = signalStore(
   <p>No items found.</p>
 }
 
-@switch (status()) {
-  @case ('loading') { <app-spinner /> }
-  @case ('error') { <app-error /> }
-  @case ('success') { <app-content /> }
-}
-
 @defer (on viewport) {
   <app-heavy-chart [data]="chartData()" />
 } @placeholder {
   <div class="skeleton"></div>
-} @loading (minimum 200ms) {
-  <app-spinner />
 }
 ```
 
@@ -172,7 +222,6 @@ export const AuthStore = signalStore(
 - Use `readonly` properties by default.
 - Use discriminated unions for mutually exclusive states.
 - Use `import type` for type-only imports.
-- Use `interface extends` over type intersections for better performance and error messages.
 - Declare explicit return types on exported/public functions.
 
 ### Performance
@@ -184,27 +233,20 @@ export const AuthStore = signalStore(
 - Memoize expensive calculations with `computed()`.
 - Use immutable array methods (`toSorted()`, `toReversed()`, `toSpliced()`).
 
-### Architecture
-
-- Use domain-driven folder structure organized by feature, not by type.
-- Use functional route guards and resolvers.
-- Use `provideAppInitializer()` for startup logic.
-- Use route input binding (`withComponentInputBinding()`) to bind route params directly to component inputs.
-
 ### Naming Conventions
 
 - kebab-case for file names (`user-profile.component.ts`)
 - PascalCase for classes, interfaces, types
 - camelCase for variables, functions, methods
 - UPPER_SNAKE_CASE for constants
-- Suffix files with their type: `.component.ts`, `.service.ts`, `.pipe.ts`, `.guard.ts`, `.interceptor.ts`, `.directive.ts`, `.store.ts`
+- Suffix files: `.component.ts`, `.service.ts`, `.pipe.ts`, `.guard.ts`, `.store.ts`
 
 ### Import Order
 
-1. Angular core and common modules (`@angular/*`)
-2. RxJS modules (`rxjs`, `rxjs/operators`)
-3. Third-party libraries (`@ngrx/*`, etc.)
-4. Application core imports (`@iorder/shared-contracts`, etc.)
+1. Angular core (`@angular/*`)
+2. RxJS (`rxjs`, `rxjs/operators`)
+3. Third-party (`@ngrx/*`, etc.)
+4. Application core (`@iorder/shared-contracts`, etc.)
 5. Shared module imports
 6. Relative path imports
 
@@ -221,227 +263,41 @@ export const AuthStore = signalStore(
 7. **NgRx Signal Store** — для всего state management, stores живут в `features/`
 8. **Signal Forms** — для всех новых форм
 9. **Shared-first** — компоненты для mobile выноси в `@iorder/shared-ui`
-10. **Бизнес-логика в shared-logic** — не дублируй между web и mobile
-11. **Type-safe contracts** — типы из `@iorder/shared-contracts`
-12. **Change Detection OnPush** — во всех компонентах
-
-## MCP Tools (Angular CLI)
-
-Используй MCP-инструменты Angular CLI для получения актуальной информации:
-- `search_documentation` — поиск по официальной документации Angular
-- `get_best_practices` — лучшие практики по конкретной теме
-- `find_examples` — поиск примеров кода
-
-## Структура приложения — Feature-Sliced Design (FSD)
-
-```
-frontend/web/src/app/
-├── pages/                    # Страницы (композиция из widgets/features)
-│   ├── landing/              # Лендинг + home page
-│   ├── customer/             # Кабинет покупателя
-│   ├── supplier/             # Кабинет поставщика
-│   └── admin/                # Панель администратора
-│
-├── widgets/                  # Составные UI-блоки из нескольких features/entities
-│
-├── features/                 # Действия пользователя + store
-│   └── auth/
-│       ├── login/            # login.component.ts + login.store.ts
-│       └── register/         # register.component.ts + register.store.ts
-│
-├── entities/                 # Бизнес-сущности
-│   ├── user/model/           # user.types.ts
-│   ├── product/model/        # product.types.ts
-│   └── order/model/          # order.types.ts
-│
-├── shared/                   # Local shared (guards, API, types, schemas)
-│   ├── api/                  # auth.service.ts
-│   ├── guards/               # auth.guard.ts (roleGuard)
-│   ├── store/                # app.store.ts (global app state)
-│   ├── schemas/              # Frontend-only Zod schemas
-│   └── types/                # auth.types.ts
-│
-├── app.config.ts
-├── app.routes.ts
-└── app.ts
-```
-
-### Правило зависимостей (СТРОГО)
-
-```
-pages → widgets → features → entities → shared → @iorder/*
-```
-
-Каждый слой импортирует **только нижестоящие**. Контролируется Sheriff.
-
-### Где что размещать:
-
-| Что | Слой | Пример |
-|-----|------|--------|
-| Страница с роутингом | `pages/` | `pages/customer/customer.component.ts` |
-| Составной блок из features | `widgets/` | `widgets/product-card/` |
-| Действие + store | `features/` | `features/auth/login/login.store.ts` |
-| Модель сущности, API, мини-UI | `entities/` | `entities/product/model/` |
-| Guards, http wrapper, types | `shared/` | `shared/guards/auth.guard.ts` |
-
-## Zod-схемы — два уровня
-
-### 1. Общие схемы (backend + frontend): `@iorder/shared-contracts`
-
-- Путь: `packages/shared-contracts/src/schemas/`
-- Импорт: `import { LoginSchema } from '@iorder/shared-contracts';`
-- Содержат: валидации для API request/response (auth, product, order)
-- Используются: и в ElysiaJS backend, и в Angular frontend
-
-### 2. Frontend-only схемы: `shared/schemas/`
-
-- Путь: `frontend/web/src/app/shared/schemas/`
-- Содержат: UI-специфичные валидации, которые **не нужны backend**
-- Примеры: валидация формы поиска, фильтров каталога, настроек UI, step-wizard форм
-- Могут использовать и расширять shared-схемы через `.extend()` / `.merge()`
-
-**Правило:** Если валидация нужна и backend, и frontend — помести в `@iorder/shared-contracts`. Если только frontend — в `shared/schemas/`.
-
-## Shared UI компоненты: `@iorder/shared-ui`
-
-Библиотека переиспользуемых UI компонентов для web и будущего мобильного приложения (Ionic).
-
-- Путь: `packages/shared-ui/src/components/`
-- Импорт: `import { UiInputComponent, UiButtonComponent } from '@iorder/shared-ui';`
-- Каждый компонент в своей папке: `components/input/`, `components/button/`
-- Стилизация через CSS custom properties (`--ui-primary-color`, `--ui-border-radius`, etc.) — позволяет темизацию
-
-### Доступные компоненты:
-
-| Компонент | Селектор | Описание |
-|-----------|----------|----------|
-| `UiInputComponent` | `<ui-input>` | Text input с label, error, placeholder |
-| `UiButtonComponent` | `<ui-button>` | Button с вариантами (primary, secondary, outline, ghost, danger), размерами и loading state |
-
-### Правила для shared-ui:
-
-1. Компоненты должны быть framework-agnostic настолько, насколько возможно (для совместимости с Ionic)
-2. Стилизация — только через CSS custom properties (для темизации web/mobile)
-3. Никаких зависимостей от доменной логики — только UI
-4. Sheriff tag: `type:shared-ui` — все FSD слои могут импортировать, но shared-ui не может импортировать FSD слои
-
-## Роуты
-
-- `/` — лендинг (неавторизованный пользователь)
-- `/customer` — кабинет покупателя (каталог, корзина, заказы)
-- `/supplier` — кабинет поставщика
-- `/admin` — панель администратора
-
-## SSE интеграция
-
-Для подключения к SSE используй `EventSource` API или кастомный Angular-сервис.
-Запрос отправляется по HTTP, ответ приходит через SSE stream.
-
-## Браузер и отладка
-
-Три MCP-инструмента — каждый для своей задачи, не дублируй:
-
-| Инструмент | Когда использовать |
-|---|---|
-| **Playwright** | Открыть страницу, навигация, клики, проверить что UI работает. Headless по умолчанию, headed если пользователь хочет видеть |
-| **Chrome DevTools** | Отладка: console errors, network requests, performance, DOM inspection |
-| **Browser MCP** | Расширенное взаимодействие с браузером |
-
-**Правила:**
-- После изменений во фронтенде — проверяй через Playwright что страница загружается без ошибок
-- Если пользователь просит «открой в браузере» или «покажи» — используй Playwright в headed-режиме
-- Для отладки проблем (ошибки в console, сетевые запросы) — используй Chrome DevTools
-- Если найдены ошибки — исправь их, не спрашивая пользователя
-- Сообщай пользователю только результат: «ошибок нет» или «исправил X»
+10. **Type-safe contracts** — типы из `@iorder/shared-contracts`
+11. **Change Detection OnPush** — во всех компонентах
 
 ## Контракты (КРИТИЧЕСКИ ВАЖНО)
 
-API контракты берутся из `@iorder/shared-contracts`. Это общий пакет между frontend и backend.
+API контракты берутся из `@iorder/shared-contracts`:
+- `src/types/` — IProduct, IUser, IOrder, ApiResponse<T>, PaginatedResponse<T>
+- `src/schemas/` — Zod-схемы валидации
+- `src/endpoints/` — Request/Response контракты
+- `src/enums/` — UserRole, OrderStatus, PaymentStatus
+- `src/events/` — EventTopics, Event payloads
 
 **Правила:**
-1. **Всегда используй endpoint contracts** из `@iorder/shared-contracts` для типизации HTTP-запросов и ответов
-2. **Никогда не создавай локальные интерфейсы** для request/response — используй только из shared-contracts
-3. Если нужен новый эндпоинт — **сначала добавь контракт** в `packages/shared-contracts/src/endpoints/`, потом используй его
-4. Zod-схемы из `src/dto/` используются для валидации на бэкенде, типы из `src/endpoints/` — для типизации на обоих сторонах
+1. Всегда используй endpoint contracts для типизации HTTP-запросов
+2. Никогда не создавай локальные интерфейсы для request/response
+3. Новый эндпоинт → сначала контракт, потом использование
 
-**Пример использования во фронтенде:**
-```typescript
-import type { GetProductsResponse, GetProductByIdResponse } from '@iorder/shared-contracts';
+## Shared UI компоненты (`ui/` или будущий `@iorder/shared-ui`)
 
-products = httpResource<GetProductsResponse>(() => ({
-  url: '/api/products',
-  params: { page: '1', limit: '20' },
-}));
-```
+- Стилизация через CSS custom properties (`--ui-primary-color`, `--ui-border-radius`)
+- Компоненты framework-agnostic (для совместимости с Ionic)
+- Никаких зависимостей от доменной логики
 
-**Структура shared-contracts:**
-- `src/types/` — базовые интерфейсы (IProduct, IUser, IOrder, etc.)
-- `src/dto/` — Zod-схемы валидации + inferred DTO типы
-- `src/endpoints/` — типизированные request/response для каждого API эндпоинта
-- `src/enums/` — перечисления (UserRole, OrderStatus, etc.)
-- `src/events/` — RedPanda event payloads
+## Proxy конфигурация
 
----
+`frontend/web/proxy.conf.json`: `/api/*` → `http://localhost:3000` (API Gateway)
 
-## Примеры кода
+## Браузер и отладка
 
-### httpResource
+| Инструмент | Когда использовать |
+|---|---|
+| **Playwright** | Headless проверка UI, навигация, клики |
+| **Chrome DevTools** | Console errors, network, performance |
 
-```typescript
-import { httpResource } from '@angular/common/http';
-
-@Injectable({ providedIn: 'root' })
-export class FlightService {
-  createResource(criteria: Signal<Criteria>) {
-    return httpResource<Flight[]>(
-      () => ({
-        url: `${this.configService.config.baseUrl}/flight`,
-        headers: { Accept: 'application/json' },
-        params: { from: criteria().from, to: criteria().to },
-      }),
-      { defaultValue: [] }
-    );
-  }
-}
-```
-
-### rxResource
-
-```typescript
-import { rxResource } from '@angular/core/rxjs-interop';
-
-createResource(criteria: Signal<Criteria>) {
-  return rxResource({
-    params: criteria,
-    stream: (loaderParams) => {
-      const c = loaderParams.params;
-      return this.find(c.from, c.to);
-    },
-    defaultValue: [],
-  });
-}
-```
-
-### NgRx Signal Store with Entities
-
-```typescript
-import { signalStore, withState, withComputed, withMethods, patchState } from '@ngrx/signals';
-import { withEntities, addEntity, removeEntity, setEntities } from '@ngrx/signals/entities';
-import { rxMethod } from '@ngrx/signals/rxjs-interop';
-
-export const ProductStore = signalStore(
-  { providedIn: 'root' },
-  withEntities<IProduct>(),
-  withComputed((store) => ({
-    totalProducts: computed(() => store.entities().length),
-  })),
-  withMethods((store, productService = inject(ProductService)) => ({
-    loadProducts: rxMethod<void>(
-      pipe(
-        switchMap(() => productService.getAll()),
-        tap((products) => patchState(store, setEntities(products)))
-      )
-    ),
-  })),
-);
-```
+**Правила:**
+- После изменений — проверяй через Playwright что страница загружается без ошибок
+- Если найдены ошибки — исправь, не спрашивая пользователя
+- Сообщай только результат
