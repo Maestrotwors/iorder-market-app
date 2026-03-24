@@ -1,9 +1,11 @@
-# E2E test environment — spins up all services + runs Playwright tests
+# E2E test environment — spins up all services + test database + runs tests
 # Usage:
-#   Full stack + E2E:  docker compose -f infrastructure/docker/docker-compose.test.yml up --build --abort-on-container-exit e2e-runner
-#   API only:          docker compose -f infrastructure/docker/docker-compose.test.yml up -d --build --wait api-gateway
+#   Full stack:     docker compose -f infrastructure/docker/docker-compose.test.yml up -d --build --wait
+#   With E2E:       docker compose -f infrastructure/docker/docker-compose.test.yml --profile e2e up --build --abort-on-container-exit e2e-runner
+#   Teardown:       docker compose -f infrastructure/docker/docker-compose.test.yml --profile e2e down -v
 
 services:
+  # ==================== Test Database ====================
   postgres:
     image: postgres:16-alpine
     environment:
@@ -11,9 +13,81 @@ services:
       POSTGRES_USER: iorder
       POSTGRES_PASSWORD: iorder_secret
     ports:
-      - '5432:5432'
+      - '5433:5432'
+    tmpfs:
+      - /var/lib/postgresql/data
+    command:
+      - 'postgres'
+      - '-c'
+      - 'wal_level=logical'
+      - '-c'
+      - 'max_replication_slots=4'
+      - '-c'
+      - 'max_wal_senders=4'
+      - '-c'
+      - 'fsync=off'
+      - '-c'
+      - 'synchronous_commit=off'
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U iorder -d iorder_test']
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+  # ==================== DB Migration ====================
+  db-migrate:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.microservice
+      args:
+        SERVICE: api-gateway
+    entrypoint: ['sh', '-c', 'bunx prisma migrate deploy --schema=database/prisma/schema.prisma']
+    environment:
+      DATABASE_URL: postgresql://iorder:iorder_secret@postgres:5432/iorder_test
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ==================== Microservices ====================
+  auth-service:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.microservice
+      args:
+        SERVICE: auth-service
+    environment:
+      AUTH_SERVICE_PORT: '3002'
+      RUNTIME: docker
+      DATABASE_URL: postgresql://iorder:iorder_secret@postgres:5432/iorder_test
+      JWT_SECRET: test-secret-must-be-32-chars-long!!
+      NODE_ENV: test
+      OTEL_EXPORTER_OTLP_ENDPOINT: 'http://localhost:4318'
+    depends_on:
+      db-migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:3002/health']
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  products-service:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.microservice
+      args:
+        SERVICE: products-service
+    environment:
+      PRODUCTS_SERVICE_PORT: '3001'
+      RUNTIME: docker
+      DATABASE_URL: postgresql://iorder:iorder_secret@postgres:5432/iorder_test
+      NODE_ENV: test
+      OTEL_EXPORTER_OTLP_ENDPOINT: 'http://localhost:4318'
+    depends_on:
+      db-migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:3001/health']
       interval: 3s
       timeout: 3s
       retries: 10
@@ -33,6 +107,7 @@ services:
       PRODUCTS_SERVICE_PORT: '3001'
       AUTH_SERVICE_HOST: auth-service
       AUTH_SERVICE_PORT: '3002'
+      RUNTIME: docker
       DATABASE_URL: postgresql://iorder:iorder_secret@postgres:5432/iorder_test
       JWT_SECRET: test-secret-must-be-32-chars-long!!
       NODE_ENV: test
@@ -48,47 +123,7 @@ services:
       timeout: 3s
       retries: 10
 
-  products-service:
-    build:
-      context: ../..
-      dockerfile: infrastructure/docker/Dockerfile.microservice
-      args:
-        SERVICE: products-service
-    environment:
-      PRODUCTS_SERVICE_PORT: '3001'
-      DATABASE_URL: postgresql://iorder:iorder_secret@postgres:5432/iorder_test
-      NODE_ENV: test
-      OTEL_EXPORTER_OTLP_ENDPOINT: 'http://localhost:4318'
-    depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:3001/health']
-      interval: 3s
-      timeout: 3s
-      retries: 10
-
-  auth-service:
-    build:
-      context: ../..
-      dockerfile: infrastructure/docker/Dockerfile.microservice
-      args:
-        SERVICE: auth-service
-    environment:
-      AUTH_SERVICE_PORT: '3002'
-      DATABASE_URL: postgresql://iorder:iorder_secret@postgres:5432/iorder_test
-      JWT_SECRET: test-secret-must-be-32-chars-long!!
-      NODE_ENV: test
-      OTEL_EXPORTER_OTLP_ENDPOINT: 'http://localhost:4318'
-    depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:3002/health']
-      interval: 3s
-      timeout: 3s
-      retries: 10
-
+  # ==================== Frontend ====================
   frontend:
     build:
       context: ../..
@@ -107,6 +142,7 @@ services:
       timeout: 3s
       retries: 10
 
+  # ==================== E2E Test Runner ====================
   e2e-runner:
     build:
       context: ../..
