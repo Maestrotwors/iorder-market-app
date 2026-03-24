@@ -97,9 +97,65 @@ jobs:
           bun-version: '1.1.45'
       - run: bun audit || true
 
+  # ---------------------------------------------------------------------------
+  # E2E — spin up all services in Docker Compose, run Playwright API tests
+  # ---------------------------------------------------------------------------
+  e2e:
+    needs: [build-backend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build and start services
+        run: |
+          docker compose -f infrastructure/docker/docker-compose.test.yml up -d --build --wait
+        timeout-minutes: 5
+
+      - name: Wait for API Gateway
+        run: |
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:3000/api/health | grep -q '"ok"'; then
+              echo "API Gateway is ready"
+              exit 0
+            fi
+            echo "Waiting for API Gateway... ($i/30)"
+            sleep 2
+          done
+          echo "API Gateway failed to start"
+          docker compose -f infrastructure/docker/docker-compose.test.yml logs
+          exit 1
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.1.45'
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Install Playwright browsers
+        run: bunx playwright install chromium --with-deps
+
+      - name: Run E2E API tests
+        run: bunx playwright test --config=e2e/playwright.config.ts
+        env:
+          API_ONLY: 'true'
+          API_URL: 'http://localhost:3000'
+          CI: 'true'
+
+      - name: Show service logs on failure
+        if: failure()
+        run: docker compose -f infrastructure/docker/docker-compose.test.yml logs
+
+      - name: Cleanup
+        if: always()
+        run: docker compose -f infrastructure/docker/docker-compose.test.yml down -v
+
+  # ---------------------------------------------------------------------------
+  # Gate — all checks must pass before merge
+  # ---------------------------------------------------------------------------
   ci:
     if: always()
-    needs: [lint, test, build-frontend, build-backend, security]
+    needs: [lint, test, build-frontend, build-backend, security, e2e]
     runs-on: ubuntu-latest
     steps:
       - name: Check results
@@ -107,7 +163,8 @@ jobs:
           if [[ "${{ needs.lint.result }}" != "success" || \
                 "${{ needs.test.result }}" != "success" || \
                 "${{ needs.build-frontend.result }}" != "success" || \
-                "${{ needs.build-backend.result }}" != "success" ]]; then
+                "${{ needs.build-backend.result }}" != "success" || \
+                "${{ needs.e2e.result }}" != "success" ]]; then
             echo "One or more required jobs failed"
             exit 1
           fi
