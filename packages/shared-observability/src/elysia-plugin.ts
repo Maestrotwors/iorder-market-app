@@ -122,21 +122,27 @@ export function observabilityPlugin(config: ObservabilityPluginConfig) {
       const s = store as Record<string, unknown>;
       const span = s.__otelSpan as Span | undefined;
       const url = new URL(request.url);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const errorStack =
+        error instanceof Error ? error.stack : undefined;
 
       if (span) {
         span.setStatus({
           code: SpanStatusCode.ERROR,
-          message: error.message,
+          message: errorMessage,
         });
-        span.recordException(error);
+        if (error instanceof Error) {
+          span.recordException(error);
+        }
         span.end();
       }
 
       logger.error('request_error', {
         method: request.method,
         path: url.pathname,
-        error: error.message,
-        stack: error.stack,
+        error: errorMessage,
+        stack: errorStack,
       });
     });
 }

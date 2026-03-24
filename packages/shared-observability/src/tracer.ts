@@ -5,7 +5,7 @@ import {
   SimpleSpanProcessor,
 } from '@opentelemetry/sdk-trace-base';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { Resource } from '@opentelemetry/resources';
+import { resourceFromAttributes } from '@opentelemetry/resources';
 import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
@@ -30,24 +30,23 @@ export function initTracer(config: TracerConfig): BasicTracerProvider {
     process.env.OTEL_EXPORTER_OTLP_ENDPOINT ??
     'http://localhost:4318';
 
-  const resource = new Resource({
+  const resource = resourceFromAttributes({
     [ATTR_SERVICE_NAME]: config.serviceName,
     [ATTR_SERVICE_VERSION]: config.serviceVersion ?? '0.0.1',
   });
-
-  provider = new BasicTracerProvider({ resource });
 
   const exporter = new OTLPTraceExporter({
     url: `${endpoint}/v1/traces`,
   });
 
   // Dev: flush immediately; Prod: batch for performance
-  const processor = config.isDev
-    ? new SimpleSpanProcessor(exporter)
-    : new BatchSpanProcessor(exporter);
+  const spanProcessors = config.isDev
+    ? [new SimpleSpanProcessor(exporter)]
+    : [new BatchSpanProcessor(exporter)];
 
-  provider.addSpanProcessor(processor);
-  provider.register();
+  provider = new BasicTracerProvider({ resource, spanProcessors });
+
+  trace.setGlobalTracerProvider(provider);
 
   return provider;
 }
