@@ -1,0 +1,204 @@
+name: Deploy to Production
+
+# Trigger: when release-please creates a release (non-RC tag)
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'  # v1.0.0, v2.3.1 — NOT v1.0.0-rc.1
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/maestrotwors
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Full test suite — must pass before production deploy
+  # ---------------------------------------------------------------------------
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.1.45'
+      - name: Cache node_modules
+        uses: actions/cache@v5
+        id: cache
+        with:
+          path: node_modules
+          key: bun-${{ hashFiles('bun.lockb', '**/package.json') }}
+      - name: Install
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: bun install
+
+  lint:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.1.45'
+      - uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: bun-${{ hashFiles('bun.lockb', '**/package.json') }}
+      - run: bun run format:check
+      - run: bun run lint
+
+  unit-tests:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.1.45'
+      - uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: bun-${{ hashFiles('bun.lockb', '**/package.json') }}
+      - run: bun run test:web
+
+  e2e:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build and start services
+        run: |
+          docker compose -f infrastructure/docker/docker-compose.test.yml up -d --build --wait
+        timeout-minutes: 10
+
+      - name: Verify services are healthy
+        run: |
+          docker compose -f infrastructure/docker/docker-compose.test.yml ps
+          curl -sf http://localhost:4200/ > /dev/null && echo "Frontend OK"
+          curl -sf http://localhost:3000/api/health && echo "API Gateway OK"
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.1.45'
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Install Playwright browsers
+        run: bunx playwright install chromium --with-deps
+
+      - name: Run E2E frontend tests
+        run: bunx playwright test --config=e2e/playwright.config.ts
+        env:
+          CI: 'true'
+          PLAYWRIGHT_BASE_URL: 'http://localhost:4200'
+
+      - name: Run API integration tests
+        run: bun run test:api
+        env:
+          API_URL: 'http://localhost:3000'
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          retention-days: 30
+
+      - name: Show service logs on failure
+        if: failure()
+        run: docker compose -f infrastructure/docker/docker-compose.test.yml logs
+
+      - name: Cleanup
+        if: always()
+        run: docker compose -f infrastructure/docker/docker-compose.test.yml down -v
+
+  # ---------------------------------------------------------------------------
+  # Build and push Docker images with release version
+  # ---------------------------------------------------------------------------
+  build-and-push:
+    needs: [lint, unit-tests, e2e]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [api-gateway, products-service, auth-service]
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push ${{ matrix.service }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infrastructure/docker/Dockerfile.microservice
+          build-args: SERVICE=${{ matrix.service }}
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/iorder-${{ matrix.service }}:${{ github.ref_name }}
+            ${{ env.IMAGE_PREFIX }}/iorder-${{ matrix.service }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-and-push-frontend:
+    needs: [lint, unit-tests, e2e]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.1.45'
+      - run: bun install
+      - run: bun run ng build web
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infrastructure/docker/Dockerfile.frontend
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/iorder-frontend:${{ github.ref_name }}
+            ${{ env.IMAGE_PREFIX }}/iorder-frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ---------------------------------------------------------------------------
+  # Deploy to production via Helm (requires manual approval)
+  # ---------------------------------------------------------------------------
+  # deploy:
+  #   needs: [build-and-push, build-and-push-frontend]
+  #   runs-on: ubuntu-latest
+  #   environment: production  # <-- requires manual approval in GitHub settings
+  #   steps:
+  #     - uses: actions/checkout@v5
+  #     - name: Deploy to production
+  #       run: |
+  #         helm upgrade --install iorder infrastructure/helm/iorder \
+  #           -f infrastructure/helm/iorder/values-prod.yaml \
+  #           --set global.image.tag=${{ github.ref_name }} \
+  #           --namespace iorder-prod --create-namespace
