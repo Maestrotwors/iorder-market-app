@@ -1,5 +1,7 @@
-# E2E test environment — spins up all backend services + PostgreSQL
-# Usage: docker compose -f infrastructure/docker/docker-compose.test.yml up -d --wait
+# E2E test environment — spins up all services + runs Playwright tests
+# Usage:
+#   Full stack + E2E:  docker compose -f infrastructure/docker/docker-compose.test.yml up --build --abort-on-container-exit e2e-runner
+#   API only:          docker compose -f infrastructure/docker/docker-compose.test.yml up -d --build --wait api-gateway
 
 services:
   postgres:
@@ -86,3 +88,33 @@ services:
       interval: 3s
       timeout: 3s
       retries: 10
+
+  frontend:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.frontend-full
+    ports:
+      - '4200:80'
+    environment:
+      API_GATEWAY_HOST: api-gateway
+      API_GATEWAY_PORT: '3000'
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:80/']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  e2e-runner:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.e2e
+    environment:
+      CI: 'true'
+    depends_on:
+      frontend:
+        condition: service_healthy
+    profiles:
+      - e2e

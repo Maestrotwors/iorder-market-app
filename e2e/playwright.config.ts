@@ -1,12 +1,12 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const isCI = !!process.env['CI'];
-const apiOnly = !!process.env['API_ONLY'];
+const isDocker = !!process.env['PLAYWRIGHT_BASE_URL'];
+const baseURL = process.env['PLAYWRIGHT_BASE_URL'] ?? 'http://localhost:4200';
 
 export default defineConfig({
   testDir: '.',
   testMatch: '**/*.e2e.ts',
-  testIgnore: apiOnly ? [] : ['api/**'],
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
@@ -14,22 +14,21 @@ export default defineConfig({
   reporter: isCI ? 'github' : 'html',
 
   use: {
-    baseURL: process.env['API_URL'] ?? 'http://localhost:4200',
+    baseURL,
     headless: true,
     screenshot: 'only-on-failure',
     trace: 'on-first-retry',
   },
 
-  projects: apiOnly
-    ? [{ name: 'api', use: {} }]
-    : [
-        {
-          name: 'chromium',
-          use: { ...devices['Desktop Chrome'] },
-        },
-      ],
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+  ],
 
-  ...(apiOnly
+  // In Docker the frontend is already running — no webServer needed
+  ...(isDocker
     ? {}
     : {
         webServer: {
