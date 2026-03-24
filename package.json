@@ -48,7 +48,7 @@
     "monitoring": "bash scripts/monitoring-setup.sh",
     "monitoring:grafana": "kubectl port-forward svc/prometheus-stack-grafana -n monitoring 3100:80",
     "observability": "bash scripts/observability-setup.sh",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "dependencies": {
     "@angular/animations": "^21.2.5",
