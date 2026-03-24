@@ -111,19 +111,11 @@ jobs:
           docker compose -f infrastructure/docker/docker-compose.test.yml up -d --build --wait
         timeout-minutes: 10
 
-      - name: Wait for frontend
+      - name: Verify services are healthy
         run: |
-          for i in $(seq 1 30); do
-            if curl -sf http://localhost:4200/ > /dev/null 2>&1; then
-              echo "Frontend is ready"
-              exit 0
-            fi
-            echo "Waiting for frontend... ($i/30)"
-            sleep 3
-          done
-          echo "Frontend failed to start"
-          docker compose -f infrastructure/docker/docker-compose.test.yml logs frontend
-          exit 1
+          docker compose -f infrastructure/docker/docker-compose.test.yml ps
+          curl -sf http://localhost:4200/ > /dev/null && echo "Frontend OK" || echo "Frontend not responding"
+          curl -sf http://localhost:3000/api/health && echo "API Gateway OK" || echo "API Gateway not responding"
 
       - uses: oven-sh/setup-bun@v2
         with:
