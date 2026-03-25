@@ -75,6 +75,9 @@ build_and_deploy() {
 
   wait_for_pods
 
+  # Cleanup dangling Docker images to prevent disk full
+  docker image prune -f --filter "until=1h" &>/dev/null || true
+
   # Return to main
   git checkout main --quiet 2>/dev/null
 
