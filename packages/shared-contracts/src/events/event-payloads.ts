@@ -38,6 +38,28 @@ export interface NotificationEvent {
   data?: Record<string, unknown>;
 }
 
+export interface ProductCreatedEvent {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  currency: string;
+  stock: number;
+  timestamp: string;
+}
+
+export interface ProductUpdatedEvent {
+  id: string;
+  changes: Record<string, unknown>;
+  timestamp: string;
+}
+
+export interface ProductDeletedEvent {
+  id: string;
+  name: string;
+  timestamp: string;
+}
+
 export interface CDCChangeEvent {
   table: string;
   operation: 'INSERT' | 'UPDATE' | 'DELETE';

@@ -97,15 +97,6 @@ redpanda:
     port: 18082
   resources: {}
 
-# --- Debezium Connect (CDC: PostgreSQL WAL → RedPanda) ---
-debezium:
-  enabled: true
-  image:
-    repository: debezium/connect
-    tag: "3.0.0.Final"
-    pullPolicy: IfNotPresent
-  resources: {}
-
 # --- RedPanda Console (UI) ---
 redpandaConsole:
   enabled: true

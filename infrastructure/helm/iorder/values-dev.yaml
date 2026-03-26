@@ -67,10 +67,6 @@ postgresql:
 redpanda:
   resources: {}
 
-# --- Debezium ---
-debezium:
-  resources: {}
-
 # --- RedPanda Console ---
 redpandaConsole:
   resources: {}

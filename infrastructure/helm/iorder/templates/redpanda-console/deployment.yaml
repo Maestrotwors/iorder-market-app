@@ -31,11 +31,6 @@ spec:
               value: |
                 kafka:
                   brokers: ["{{ include "iorder.fullname" . }}-redpanda:9092"]
-                kafkaConnect:
-                  enabled: true
-                  clusters:
-                    - name: iorder-cdc
-                      url: "http://{{ include "iorder.fullname" . }}-debezium:8083"
                 redpanda:
                   adminApi:
                     enabled: true

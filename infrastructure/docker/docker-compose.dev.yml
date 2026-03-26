@@ -72,86 +72,13 @@ services:
         schemaRegistry:
           enabled: true
           urls: ["http://redpanda:8081"]
-        kafkaConnect:
-          enabled: true
-          clusters:
-            - name: iorder-cdc
-              url: "http://debezium:8083"
     ports:
       - '8080:8080'
     depends_on:
       redpanda:
         condition: service_healthy
-      debezium:
-        condition: service_healthy
     entrypoint: /bin/sh
     command: -c 'echo "$$CONSOLE_CONFIG_FILE" > /tmp/config.yml; /app/console'
-    restart: unless-stopped
-
-  # Init: create RedPanda topics + register Debezium connector
-  cdc-init:
-    image: redpandadata/redpanda:latest
-    container_name: iorder-dev-cdc-init
-    entrypoint: /bin/sh
-    command:
-      - -c
-      - |
-        echo "Creating RedPanda topics..."
-        TOPICS="user.registered user.logged_in order.created order.status_changed order.cancelled payment.initiated payment.completed payment.failed product.created product.updated product.deleted stock.updated notification.send cdc.change"
-        for topic in $$TOPICS; do
-          rpk topic create "$$topic" --brokers redpanda:9092 --partitions 3 --replicas 1 2>/dev/null || true
-        done
-        echo "Topics created:"
-        rpk topic list --brokers redpanda:9092
-
-        echo "Waiting for Debezium Connect..."
-        for i in $$(seq 1 60); do
-          if wget -qO- http://debezium:8083/connectors > /dev/null 2>&1; then
-            echo "Debezium is ready!"
-            break
-          fi
-          sleep 5
-        done
-
-        echo "Registering PostgreSQL CDC connector (products table)..."
-        wget -qO- --post-data='{"name":"iorder-products-cdc","config":{"connector.class":"io.debezium.connector.postgresql.PostgresConnector","database.hostname":"postgres","database.port":"5432","database.user":"iorder","database.password":"iorder_secret","database.dbname":"iorder_db","topic.prefix":"cdc","schema.include.list":"public","table.include.list":"public.products","plugin.name":"pgoutput","slot.name":"iorder_products_slot","publication.autocreate.mode":"all_tables","key.converter":"org.apache.kafka.connect.json.JsonConverter","key.converter.schemas.enable":"false","value.converter":"org.apache.kafka.connect.json.JsonConverter","value.converter.schemas.enable":"false","tombstones.on.delete":"false","transforms":"unwrap","transforms.unwrap.type":"io.debezium.transforms.ExtractNewRecordState","transforms.unwrap.drop.tombstones":"true","transforms.unwrap.delete.handling.mode":"rewrite"}}' \
-          --header="Content-Type: application/json" \
-          "http://debezium:8083/connectors" || echo "Connector registration failed (will retry on next restart)"
-
-        echo "CDC init complete."
-    depends_on:
-      redpanda:
-        condition: service_healthy
-      debezium:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-
-  debezium:
-    image: debezium/connect:3.0.0.Final
-    container_name: iorder-dev-debezium
-    environment:
-      BOOTSTRAP_SERVERS: redpanda:9092
-      GROUP_ID: iorder-cdc
-      CONFIG_STORAGE_TOPIC: _debezium.configs
-      OFFSET_STORAGE_TOPIC: _debezium.offsets
-      STATUS_STORAGE_TOPIC: _debezium.status
-      CONFIG_STORAGE_REPLICATION_FACTOR: 1
-      OFFSET_STORAGE_REPLICATION_FACTOR: 1
-      STATUS_STORAGE_REPLICATION_FACTOR: 1
-    ports:
-      - '8083:8083'
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redpanda:
-        condition: service_healthy
-    healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:8083/connectors']
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
     restart: unless-stopped
 
   auth-service:
