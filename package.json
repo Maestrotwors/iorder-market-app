@@ -60,6 +60,10 @@
     "monitoring": "bash scripts/monitoring-setup.sh",
     "monitoring:grafana": "kubectl port-forward svc/prometheus-stack-grafana -n monitoring 3100:80",
     "observability": "bash scripts/observability-setup.sh",
+    "cdc:register": "bash infrastructure/debezium/register-connector.sh",
+    "cdc:topics": "bash infrastructure/redpanda/create-topics.sh",
+    "redpanda:console": "kubectl port-forward svc/iorder-market-redpanda-console 8080:8080",
+    "debezium:forward": "kubectl port-forward svc/iorder-market-debezium 8083:8083",
     "prepare": "husky || true"
   },
   "dependencies": {

@@ -1,0 +1,62 @@
+{{- if .Values.debezium.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "iorder.fullname" . }}-debezium
+  labels:
+    {{- include "iorder.labels" . | nindent 4 }}
+    {{- include "iorder.selectorLabels" (dict "service" "debezium" "context" .) | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "iorder.selectorLabels" (dict "service" "debezium" "context" .) | nindent 6 }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        {{- include "iorder.labels" . | nindent 8 }}
+        {{- include "iorder.selectorLabels" (dict "service" "debezium" "context" .) | nindent 8 }}
+    spec:
+      containers:
+        - name: debezium
+          image: "{{ .Values.debezium.image.repository }}:{{ .Values.debezium.image.tag }}"
+          imagePullPolicy: {{ .Values.debezium.image.pullPolicy }}
+          ports:
+            - containerPort: 8083
+              protocol: TCP
+          env:
+            - name: BOOTSTRAP_SERVERS
+              value: "{{ include "iorder.fullname" . }}-redpanda:9092"
+            - name: GROUP_ID
+              value: "iorder-cdc"
+            - name: CONFIG_STORAGE_TOPIC
+              value: "_debezium.configs"
+            - name: OFFSET_STORAGE_TOPIC
+              value: "_debezium.offsets"
+            - name: STATUS_STORAGE_TOPIC
+              value: "_debezium.status"
+            - name: CONFIG_STORAGE_REPLICATION_FACTOR
+              value: "1"
+            - name: OFFSET_STORAGE_REPLICATION_FACTOR
+              value: "1"
+            - name: STATUS_STORAGE_REPLICATION_FACTOR
+              value: "1"
+          readinessProbe:
+            httpGet:
+              path: /connectors
+              port: 8083
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /connectors
+              port: 8083
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            failureThreshold: 5
+          resources:
+            {{- toYaml .Values.debezium.resources | nindent 12 }}
+{{- end }}

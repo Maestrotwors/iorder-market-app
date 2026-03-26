@@ -74,6 +74,9 @@ spec:
         - podSelector:
             matchLabels:
               {{- include "iorder.selectorLabels" (dict "service" "auth-service" "context" .) | nindent 14 }}
+        - podSelector:
+            matchLabels:
+              {{- include "iorder.selectorLabels" (dict "service" "debezium" "context" .) | nindent 14 }}
       ports:
         - protocol: TCP
           port: {{ .Values.postgresql.port }}
@@ -106,6 +109,9 @@ spec:
         - podSelector:
             matchLabels:
               {{- include "iorder.selectorLabels" (dict "service" "auth-service" "context" .) | nindent 14 }}
+        - podSelector:
+            matchLabels:
+              {{- include "iorder.selectorLabels" (dict "service" "debezium" "context" .) | nindent 14 }}
       ports:
         - protocol: TCP
           port: {{ .Values.redpanda.kafka.port }}
@@ -114,6 +120,33 @@ spec:
         - protocol: TCP
           port: {{ .Values.redpanda.restProxy.port }}
 ---
+{{- if .Values.debezium.enabled }}
+# ============================================================
+# NetworkPolicy: debezium
+# Allow ingress from redpanda-console; allow egress to PostgreSQL and RedPanda
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "iorder.fullname" . }}-debezium
+  labels:
+    {{- include "iorder.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "iorder.selectorLabels" (dict "service" "debezium" "context" .) | nindent 6 }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "iorder.selectorLabels" (dict "service" "redpanda-console" "context" .) | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: 8083
+---
+{{- end }}
 # ============================================================
 # NetworkPolicy: api-gateway
 # Allow ingress from anywhere (entry point exposed via Ingress)

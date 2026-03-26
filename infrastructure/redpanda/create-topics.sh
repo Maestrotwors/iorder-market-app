@@ -1,9 +1,11 @@
 #!/bin/bash
 # Create RedPanda topics for iOrder Market
+# Usage: bash infrastructure/redpanda/create-topics.sh [broker]
 
-BROKER="localhost:19092"
+BROKER="${1:-localhost:19092}"
 
 topics=(
+  # Business events
   "user.registered"
   "user.logged_in"
   "order.created"
@@ -17,13 +19,15 @@ topics=(
   "product.deleted"
   "stock.updated"
   "notification.send"
+  # CDC
   "cdc.change"
 )
 
+echo "Creating topics on broker: $BROKER"
 for topic in "${topics[@]}"; do
-  echo "Creating topic: $topic"
-  rpk topic create "$topic" --brokers "$BROKER" --partitions 3 --replicas 1
+  rpk topic create "$topic" --brokers "$BROKER" --partitions 3 --replicas 1 2>/dev/null && echo "  + $topic" || echo "  = $topic (exists)"
 done
 
-echo "All topics created successfully!"
+echo ""
+echo "All topics:"
 rpk topic list --brokers "$BROKER"

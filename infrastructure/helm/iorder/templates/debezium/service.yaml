@@ -1,0 +1,18 @@
+{{- if .Values.debezium.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "iorder.fullname" . }}-debezium
+  labels:
+    {{- include "iorder.labels" . | nindent 4 }}
+    {{- include "iorder.selectorLabels" (dict "service" "debezium" "context" .) | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8083
+      targetPort: 8083
+      protocol: TCP
+      name: connect
+  selector:
+    {{- include "iorder.selectorLabels" (dict "service" "debezium" "context" .) | nindent 4 }}
+{{- end }}
