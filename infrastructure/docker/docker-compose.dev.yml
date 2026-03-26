@@ -44,7 +44,6 @@ services:
       - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18082
       - --advertise-pandaproxy-addr internal://redpanda:8082,external://localhost:18082
       - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:18081
-      - --advertise-schema-registry-addr internal://redpanda:8081,external://localhost:18081
     ports:
       - '18081:18081'
       - '18082:18082'
@@ -73,7 +72,7 @@ services:
         schemaRegistry:
           enabled: true
           urls: ["http://redpanda:8081"]
-        connect:
+        kafkaConnect:
           enabled: true
           clusters:
             - name: iorder-cdc
@@ -114,32 +113,10 @@ services:
           sleep 5
         done
 
-        echo "Registering PostgreSQL CDC connector..."
-        wget -qO- --post-data='{
-          "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-          "database.hostname": "postgres",
-          "database.port": "5432",
-          "database.user": "iorder",
-          "database.password": "iorder_secret",
-          "database.dbname": "iorder_db",
-          "topic.prefix": "cdc",
-          "schema.include.list": "public",
-          "table.include.list": "public.user,public.session,public.account,public.verification,public.products",
-          "plugin.name": "pgoutput",
-          "publication.name": "iorder_cdc",
-          "slot.name": "iorder_cdc_slot",
-          "publication.autocreate.mode": "filtered",
-          "key.converter": "org.apache.kafka.connect.json.JsonConverter",
-          "key.converter.schemas.enable": false,
-          "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-          "value.converter.schemas.enable": false,
-          "tombstones.on.delete": false,
-          "transforms": "unwrap",
-          "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
-          "transforms.unwrap.drop.tombstones": true,
-          "transforms.unwrap.delete.handling.mode": "rewrite"
-        }' --header="Content-Type: application/json" \
-          "http://debezium:8083/connectors/iorder-postgres-cdc/config" || echo "Connector registration failed (will retry on next restart)"
+        echo "Registering PostgreSQL CDC connector (products table)..."
+        wget -qO- --post-data='{"name":"iorder-products-cdc","config":{"connector.class":"io.debezium.connector.postgresql.PostgresConnector","database.hostname":"postgres","database.port":"5432","database.user":"iorder","database.password":"iorder_secret","database.dbname":"iorder_db","topic.prefix":"cdc","schema.include.list":"public","table.include.list":"public.products","plugin.name":"pgoutput","slot.name":"iorder_products_slot","publication.autocreate.mode":"all_tables","key.converter":"org.apache.kafka.connect.json.JsonConverter","key.converter.schemas.enable":"false","value.converter":"org.apache.kafka.connect.json.JsonConverter","value.converter.schemas.enable":"false","tombstones.on.delete":"false","transforms":"unwrap","transforms.unwrap.type":"io.debezium.transforms.ExtractNewRecordState","transforms.unwrap.drop.tombstones":"true","transforms.unwrap.delete.handling.mode":"rewrite"}}' \
+          --header="Content-Type: application/json" \
+          "http://debezium:8083/connectors" || echo "Connector registration failed (will retry on next restart)"
 
         echo "CDC init complete."
     depends_on:
@@ -151,7 +128,7 @@ services:
         condition: service_healthy
 
   debezium:
-    image: debezium/connect:2.7
+    image: debezium/connect:3.0.0.Final
     container_name: iorder-dev-debezium
     environment:
       BOOTSTRAP_SERVERS: redpanda:9092

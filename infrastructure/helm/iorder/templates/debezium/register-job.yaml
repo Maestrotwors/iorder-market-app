@@ -36,9 +36,9 @@ spec:
                 sleep 5
               done
 
-              echo "Registering PostgreSQL CDC connector..."
+              echo "Registering PostgreSQL CDC connector (products table)..."
               curl -sf -X PUT \
-                "http://{{ include "iorder.fullname" . }}-debezium:8083/connectors/iorder-postgres-cdc/config" \
+                "http://{{ include "iorder.fullname" . }}-debezium:8083/connectors/iorder-products-cdc/config" \
                 -H "Content-Type: application/json" \
                 -d '{
                   "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
@@ -49,11 +49,10 @@ spec:
                   "database.dbname": "{{ .Values.postgresql.database }}",
                   "topic.prefix": "cdc",
                   "schema.include.list": "public",
-                  "table.include.list": "public.user,public.session,public.account,public.verification,public.products",
+                  "table.include.list": "public.products",
                   "plugin.name": "pgoutput",
-                  "publication.name": "iorder_cdc",
-                  "slot.name": "iorder_cdc_slot",
-                  "publication.autocreate.mode": "filtered",
+                  "slot.name": "iorder_products_slot",
+                  "publication.autocreate.mode": "all_tables",
                   "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                   "key.converter.schemas.enable": false,
                   "value.converter": "org.apache.kafka.connect.json.JsonConverter",
@@ -67,6 +66,6 @@ spec:
 
               echo ""
               echo "Connector registered."
-              curl -sf "http://{{ include "iorder.fullname" . }}-debezium:8083/connectors/iorder-postgres-cdc/status"
+              curl -sf "http://{{ include "iorder.fullname" . }}-debezium:8083/connectors/iorder-products-cdc/status"
           resources: {}
 {{- end }}

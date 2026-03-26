@@ -102,7 +102,7 @@ debezium:
   enabled: true
   image:
     repository: debezium/connect
-    tag: "2.7"
+    tag: "3.0.0.Final"
     pullPolicy: IfNotPresent
   resources: {}
 

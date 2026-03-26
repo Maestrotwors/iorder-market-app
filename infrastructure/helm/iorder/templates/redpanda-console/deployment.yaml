@@ -31,7 +31,7 @@ spec:
               value: |
                 kafka:
                   brokers: ["{{ include "iorder.fullname" . }}-redpanda:9092"]
-                connect:
+                kafkaConnect:
                   enabled: true
                   clusters:
                     - name: iorder-cdc
