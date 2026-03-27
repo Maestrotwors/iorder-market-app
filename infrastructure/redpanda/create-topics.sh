@@ -5,22 +5,9 @@
 BROKER="${1:-localhost:19092}"
 
 topics=(
-  # Business events
-  "user.registered"
-  "user.logged_in"
-  "order.created"
-  "order.status_changed"
-  "order.cancelled"
-  "payment.initiated"
-  "payment.completed"
-  "payment.failed"
   "product.created"
   "product.updated"
   "product.deleted"
-  "stock.updated"
-  "notification.send"
-  # CDC
-  "cdc.change"
 )
 
 echo "Creating topics on broker: $BROKER"
