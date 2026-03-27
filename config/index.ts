@@ -63,7 +63,7 @@ export const config = {
   },
 
   jwt: {
-    secret: env('JWT_SECRET') ?? 'dev-secret-change-in-production',
+    secret: env('JWT_SECRET') ?? 'dev-secret-change-in-production-at-least-32-chars',
     expiration: envNum('JWT_EXPIRATION') ?? 3600,
   },
 
