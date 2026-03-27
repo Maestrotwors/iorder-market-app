@@ -5,6 +5,7 @@ import { initTracer, observabilityPlugin } from '@iorder/shared-observability';
 import { productRoutes } from './routes/products';
 import { metricsPlugin } from './metrics';
 import { initProducer } from './producer';
+import { initConsumer } from './consumer';
 import * as z from 'zod';
 
 const SERVICE_NAME = 'products-service';
@@ -66,6 +67,8 @@ initProducer().catch(() =>
     'RedPanda producer not available — events will be skipped. Start RedPanda with: docker compose up -d',
   ),
 );
+
+initConsumer().catch((err) => console.error('RedPanda consumer init failed:', err));
 
 app.listen(port);
 
