@@ -61,7 +61,11 @@ app
   )
   .use(productRoutes);
 
-initProducer().catch((err) => console.warn('RedPanda producer init failed (non-critical):', err));
+initProducer().catch(() =>
+  console.warn(
+    'RedPanda producer not available — events will be skipped. Start RedPanda with: docker compose up -d',
+  ),
+);
 
 app.listen(port);
 

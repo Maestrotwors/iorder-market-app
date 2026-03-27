@@ -1,9 +1,14 @@
-import { Kafka, type Producer } from 'kafkajs';
+import { Kafka, logLevel, type Producer } from 'kafkajs';
 import { config } from '../../../config';
 
 const kafka = new Kafka({
   clientId: 'products-service',
   brokers: config.redpanda.brokers,
+  logLevel: logLevel.NOTHING,
+  retry: {
+    retries: 1,
+    initialRetryTime: 200,
+  },
 });
 
 let producer: Producer | null = null;
