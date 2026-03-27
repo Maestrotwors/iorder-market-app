@@ -1,5 +1,3 @@
-version: '3.9'
-
 # Infrastructure services (excluding PostgreSQL — see docker-compose.db.yml)
 # Usage: docker compose -f infrastructure/docker/docker-compose.yml up -d
 
@@ -20,7 +18,6 @@ services:
       - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:${REDPANDA_PROXY_PORT:-18082}
       - --advertise-pandaproxy-addr internal://redpanda:8082,external://localhost:${REDPANDA_PROXY_PORT:-18082}
       - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:${REDPANDA_SCHEMA_PORT:-18081}
-      - --advertise-schema-registry-addr internal://redpanda:8081,external://localhost:${REDPANDA_SCHEMA_PORT:-18081}
     ports:
       - '${REDPANDA_SCHEMA_PORT:-18081}:${REDPANDA_SCHEMA_PORT:-18081}'
       - '${REDPANDA_PROXY_PORT:-18082}:${REDPANDA_PROXY_PORT:-18082}'
