@@ -67,6 +67,10 @@ postgresql:
 redpanda:
   resources: {}
 
+# --- RedPanda Console ---
+redpandaConsole:
+  resources: {}
+
 # --- Secrets ---
 secrets:
   jwtSecret: "dev-secret-change-in-production-must-be-32-chars-long!!"

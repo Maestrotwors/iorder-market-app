@@ -4,6 +4,7 @@ import { config } from '../../../config';
 import { initTracer, observabilityPlugin } from '@iorder/shared-observability';
 import { productRoutes } from './routes/products';
 import { metricsPlugin } from './metrics';
+import { initProducer } from './producer';
 import * as z from 'zod';
 
 const SERVICE_NAME = 'products-service';
@@ -58,8 +59,11 @@ app
       },
     },
   )
-  .use(productRoutes)
-  .listen(port);
+  .use(productRoutes);
+
+initProducer().catch((err) => console.warn('RedPanda producer init failed (non-critical):', err));
+
+app.listen(port);
 
 console.log(`Products Service running at http://localhost:${port}`);
 if (config.isDev) console.log(`API Docs at http://localhost:${port}/api-help`);

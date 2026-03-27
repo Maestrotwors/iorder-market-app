@@ -40,6 +40,8 @@ spec:
               bunx prisma db push --schema=database/prisma/schema.prisma --accept-data-loss
               echo "Running seed..."
               bun database/scripts/seed.ts || echo "Seed skipped (non-critical)"
+              echo "Setting up WAL for CDC..."
+              bunx prisma db execute --schema=database/prisma/schema.prisma --file=database/scripts/setup-wal.sql || echo "WAL setup skipped (non-critical)"
               echo "Database migration completed."
           env:
             - name: DATABASE_URL

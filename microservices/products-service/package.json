@@ -13,6 +13,7 @@
     "@iorder/shared-observability": "workspace:*",
     "@prisma/client": "^6.0.0",
     "elysia": "^1.2.0",
+    "kafkajs": "^2.2.4",
     "prom-client": "^15.1.3"
   },
   "devDependencies": {

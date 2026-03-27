@@ -97,6 +97,15 @@ redpanda:
     port: 18082
   resources: {}
 
+# --- RedPanda Console (UI) ---
+redpandaConsole:
+  enabled: true
+  image:
+    repository: redpandadata/console
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  resources: {}
+
 # --- Secrets ---
 secrets:
   jwtSecret: "change-me-in-production"

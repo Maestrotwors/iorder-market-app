@@ -1,0 +1,59 @@
+{{- if and .Values.redpanda.enabled .Values.redpandaConsole.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "iorder.fullname" . }}-redpanda-console
+  labels:
+    {{- include "iorder.labels" . | nindent 4 }}
+    {{- include "iorder.selectorLabels" (dict "service" "redpanda-console" "context" .) | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "iorder.selectorLabels" (dict "service" "redpanda-console" "context" .) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "iorder.labels" . | nindent 8 }}
+        {{- include "iorder.selectorLabels" (dict "service" "redpanda-console" "context" .) | nindent 8 }}
+    spec:
+      containers:
+        - name: console
+          image: "{{ .Values.redpandaConsole.image.repository }}:{{ .Values.redpandaConsole.image.tag }}"
+          imagePullPolicy: {{ .Values.redpandaConsole.image.pullPolicy }}
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          env:
+            - name: CONFIG_FILEPATH
+              value: /tmp/config.yml
+            - name: CONSOLE_CONFIG_FILE
+              value: |
+                kafka:
+                  brokers: ["{{ include "iorder.fullname" . }}-redpanda:9092"]
+                redpanda:
+                  adminApi:
+                    enabled: true
+                    urls: ["http://{{ include "iorder.fullname" . }}-redpanda:9644"]
+                schemaRegistry:
+                  enabled: true
+                  urls: ["http://{{ include "iorder.fullname" . }}-redpanda:{{ .Values.redpanda.schemaRegistry.port }}"]
+          command:
+            - /bin/sh
+            - -c
+            - 'echo "$CONSOLE_CONFIG_FILE" > /tmp/config.yml; /app/console'
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            {{- toYaml .Values.redpandaConsole.resources | nindent 12 }}
+{{- end }}

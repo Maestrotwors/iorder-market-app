@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia';
-import { CreateProductSchema, UpdateProductSchema } from '@iorder/shared-contracts';
+import { CreateProductSchema, UpdateProductSchema, EventTopics } from '@iorder/shared-contracts';
 import type { IProduct, PaginatedResponse, ApiResponse } from '@iorder/shared-contracts';
+import { publishEvent } from '../producer';
 
 // Mock data — will be replaced with Prisma queries
 const mockProducts: IProduct[] = [
@@ -123,6 +124,16 @@ export const productRoutes = new Elysia({ prefix: '/products' })
       };
       mockProducts.push(product);
 
+      publishEvent(EventTopics.PRODUCT_CREATED, product.id, {
+        id: product.id,
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        currency: product.currency,
+        stock: product.stock,
+        timestamp: new Date().toISOString(),
+      });
+
       return {
         success: true,
         data: product,
@@ -151,6 +162,12 @@ export const productRoutes = new Elysia({ prefix: '/products' })
         };
       }
       mockProducts[index] = { ...mockProducts[index], ...body, updatedAt: new Date() };
+
+      publishEvent(EventTopics.PRODUCT_UPDATED, params.id, {
+        id: params.id,
+        changes: body,
+        timestamp: new Date().toISOString(),
+      });
 
       return {
         success: true,
@@ -182,7 +199,14 @@ export const productRoutes = new Elysia({ prefix: '/products' })
           timestamp: new Date().toISOString(),
         };
       }
+      const deletedName = mockProducts[index].name;
       mockProducts.splice(index, 1);
+
+      publishEvent(EventTopics.PRODUCT_DELETED, params.id, {
+        id: params.id,
+        name: deletedName,
+        timestamp: new Date().toISOString(),
+      });
 
       return {
         success: true,
