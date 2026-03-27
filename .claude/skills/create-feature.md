@@ -68,7 +68,6 @@ import { {{PascalName}}Store } from './{{kebab-name}}.store';
 
 @Component({
   selector: 'app-{{kebab-name}}',
-  standalone: true,
   imports: [],
   providers: [{{PascalName}}Store],
   changeDetection: ChangeDetectionStrategy.OnPush,

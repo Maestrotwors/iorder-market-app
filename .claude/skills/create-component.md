@@ -20,7 +20,7 @@ If no path is provided, ask the user where to place the component.
 
 Every component MUST be:
 1. **Single-file** — template, styles, and logic in ONE `.ts` file (inline `template` and `styles`)
-2. **Standalone** — `standalone: true` (no NgModules)
+2. **Standalone** — standalone is the default in Angular 21+. **NEVER set `standalone: true` explicitly** — it's redundant
 3. **OnPush** — `changeDetection: ChangeDetectionStrategy.OnPush`
 4. **Zoneless-compatible** — use Signals for all reactivity
 5. **No test file** — do not create `.spec.ts`
@@ -34,7 +34,6 @@ import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@a
 
 @Component({
   selector: 'app-{{kebab-name}}',
-  standalone: true,
   imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
