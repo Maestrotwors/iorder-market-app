@@ -12,8 +12,8 @@ frontend:
     repository: iorder/frontend
     tag: latest
     pullPolicy: Never
-  serviceType: LoadBalancer
-  loadBalancerPort: 30080
+  serviceType: NodePort
+  nodePort: 30080
   resources: {}
 
 # --- API Gateway ---

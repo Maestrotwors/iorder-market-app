@@ -22,6 +22,11 @@
       "schemaRegistry": 18081,
       "restProxy": 18082
     },
+    "redis": {
+      "host": "redis",
+      "port": 6379,
+      "password": "iorder_redis_secret"
+    },
     "redpandaConsole": {
       "host": "redpanda-console",
       "port": 8080
