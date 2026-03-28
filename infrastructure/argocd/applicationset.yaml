@@ -1,6 +1,7 @@
 # iOrder Market — Per-service ArgoCD ApplicationSet
 # Creates independent ArgoCD Applications for each microservice and infra layer.
-# Each Application deploys only its own resources by toggling enabled flags.
+# fullnameOverride ensures all apps generate resources named iorder-market-*.
+# sharedResources.enabled controls ConfigMap/Secret rendering (infra only).
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
@@ -10,8 +11,9 @@ spec:
   generators:
     - list:
         elements:
-          # Infrastructure: PostgreSQL, RedPanda, Secrets, ConfigMap, Ingress, NetworkPolicies, PDB, Monitoring
+          # Infrastructure: ConfigMap, Secrets, PostgreSQL, RedPanda, PDB, NetworkPolicies, Monitoring, Ingress
           - name: infra
+            sharedResourcesEnabled: "true"
             frontendEnabled: "false"
             apiGatewayEnabled: "false"
             productsServiceEnabled: "false"
@@ -25,6 +27,7 @@ spec:
             ingressEnabled: "true"
           # Angular frontend (Nginx)
           - name: frontend
+            sharedResourcesEnabled: "false"
             frontendEnabled: "true"
             apiGatewayEnabled: "false"
             productsServiceEnabled: "false"
@@ -38,6 +41,7 @@ spec:
             ingressEnabled: "false"
           # API Gateway — reverse proxy, JWT verification, routing
           - name: api-gateway
+            sharedResourcesEnabled: "false"
             frontendEnabled: "false"
             apiGatewayEnabled: "true"
             productsServiceEnabled: "false"
@@ -51,6 +55,7 @@ spec:
             ingressEnabled: "false"
           # Products CRUD microservice
           - name: products-service
+            sharedResourcesEnabled: "false"
             frontendEnabled: "false"
             apiGatewayEnabled: "false"
             productsServiceEnabled: "true"
@@ -64,6 +69,7 @@ spec:
             ingressEnabled: "false"
           # Authentication microservice (Better Auth, JWT, JWKS)
           - name: auth-service
+            sharedResourcesEnabled: "false"
             frontendEnabled: "false"
             apiGatewayEnabled: "false"
             productsServiceEnabled: "false"
@@ -88,10 +94,15 @@ spec:
         targetRevision: main
         path: infrastructure/helm/iorder
         helm:
+          releaseName: iorder-market
           valueFiles:
             - values.yaml
             - values-dev.yaml
           parameters:
+            - name: fullnameOverride
+              value: "iorder-market"
+            - name: sharedResources.enabled
+              value: "{{sharedResourcesEnabled}}"
             - name: frontend.enabled
               value: "{{frontendEnabled}}"
             - name: apiGateway.enabled

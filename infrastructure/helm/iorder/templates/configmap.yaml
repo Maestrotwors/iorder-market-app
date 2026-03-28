@@ -1,3 +1,4 @@
+{{- if .Values.sharedResources.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -22,3 +23,4 @@ data:
   OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.observability.otlpEndpoint | quote }}
   # Environment
   NODE_ENV: {{ .Values.global.environment | quote }}
+{{- end }}

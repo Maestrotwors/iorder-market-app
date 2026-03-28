@@ -156,6 +156,10 @@ redpandaConsole:
       cpu: 200m
       memory: 256Mi
 
+# --- Shared Resources (ConfigMap, Secrets — only in infra app) ---
+sharedResources:
+  enabled: true
+
 # --- Secrets ---
 secrets:
   jwtSecret: "change-me-in-production"
