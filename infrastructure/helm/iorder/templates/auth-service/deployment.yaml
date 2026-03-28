@@ -22,6 +22,8 @@ spec:
       labels:
         {{- include "iorder.labels" . | nindent 8 }}
         {{- include "iorder.selectorLabels" (dict "service" "auth-service" "context" .) | nindent 8 }}
+      annotations:
+        deploy/timestamp: {{ .Values.authService.deployTimestamp | default "initial" | quote }}
     spec:
       topologySpreadConstraints:
         - maxSkew: 1

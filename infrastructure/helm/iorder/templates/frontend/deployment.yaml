@@ -21,6 +21,8 @@ spec:
       labels:
         {{- include "iorder.labels" . | nindent 8 }}
         {{- include "iorder.selectorLabels" (dict "service" "frontend" "context" .) | nindent 8 }}
+      annotations:
+        deploy/timestamp: {{ .Values.frontend.deployTimestamp | default "initial" | quote }}
     spec:
       topologySpreadConstraints:
         - maxSkew: 1
