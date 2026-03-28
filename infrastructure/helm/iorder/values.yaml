@@ -16,7 +16,7 @@ frontend:
 
 # --- API Gateway ---
 apiGateway:
-  replicaCount: 1
+  replicaCount: 2
   image:
     repository: iorder/api-gateway
     tag: latest
