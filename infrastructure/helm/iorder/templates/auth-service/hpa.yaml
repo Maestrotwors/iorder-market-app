@@ -1,4 +1,4 @@
-{{- if .Values.authService.hpa.enabled }}
+{{- if and .Values.authService.enabled .Values.authService.hpa.enabled }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:

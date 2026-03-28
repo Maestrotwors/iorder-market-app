@@ -1,3 +1,4 @@
+{{- if .Values.authService.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -69,3 +70,4 @@ spec:
             preStop:
               exec:
                 command: ["/bin/sh", "-c", "sleep 5"]
+{{- end }}

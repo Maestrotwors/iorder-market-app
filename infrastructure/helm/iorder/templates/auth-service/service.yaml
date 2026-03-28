@@ -1,3 +1,4 @@
+{{- if .Values.authService.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -14,3 +15,4 @@ spec:
       name: http
   selector:
     {{- include "iorder.selectorLabels" (dict "service" "auth-service" "context" .) | nindent 4 }}
+{{- end }}

@@ -18,6 +18,7 @@ frontend:
 
 # --- API Gateway ---
 apiGateway:
+  enabled: true
   replicaCount: 2
   image:
     repository: iorder/api-gateway
@@ -29,6 +30,7 @@ apiGateway:
 
 # --- Products Service ---
 productsService:
+  enabled: true
   replicaCount: 3
   image:
     repository: iorder/products-service
@@ -40,6 +42,7 @@ productsService:
 
 # --- Auth Service ---
 authService:
+  enabled: true
   replicaCount: 3
   image:
     repository: iorder/auth-service
