@@ -24,7 +24,10 @@ apiGateway:
   port: 3000
   resources: {}
   hpa:
-    enabled: false
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilization: 70
 
 # --- Products Service ---
 productsService:
