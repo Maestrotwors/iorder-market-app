@@ -7,7 +7,7 @@ global:
 # --- Frontend ---
 frontend:
   enabled: true
-  replicaCount: 2
+  replicaCount: 3
   image:
     repository: iorder/frontend
     tag: latest
@@ -18,7 +18,7 @@ frontend:
 
 # --- API Gateway ---
 apiGateway:
-  replicaCount: 2
+  replicaCount: 1
   image:
     repository: iorder/api-gateway
     tag: latest
@@ -65,6 +65,8 @@ postgresql:
 
 # --- RedPanda ---
 redpanda:
+  topics:
+    partitions: 3
   resources: {}
 
 # --- RedPanda Console ---

@@ -7,7 +7,7 @@ global:
 # --- Frontend (Angular + Nginx) ---
 frontend:
   enabled: true
-  replicaCount: 2
+  replicaCount: 3
   image:
     repository: iorder/frontend
     tag: latest
@@ -95,6 +95,8 @@ redpanda:
     port: 18081
   restProxy:
     port: 18082
+  topics:
+    partitions: 9
   resources: {}
 
 # --- RedPanda Console (UI) ---
