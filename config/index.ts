@@ -54,6 +54,15 @@ export const config = {
     },
   },
 
+  redis: {
+    host: env('REDIS_HOST') ?? defaultHost(ports.infrastructure.redis.host),
+    port: envNum('REDIS_PORT') ?? ports.infrastructure.redis.port,
+    password: env('REDIS_PASSWORD') ?? ports.infrastructure.redis.password,
+    get url() {
+      return env('REDIS_URL') ?? `redis://:${this.password}@${this.host}:${this.port}`;
+    },
+  },
+
   redpanda: {
     host: env('REDPANDA_HOST') ?? defaultHost(ports.infrastructure.redpanda.host),
     brokers: (

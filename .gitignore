@@ -18,10 +18,10 @@ out-tsc/
 .DS_Store
 Thumbs.db
 
-# Environment (generated from config/ports.json)
+# Environment (generated from config/ports.json via bun run env:generate)
 .env
-.env.db
 .env.docker
+.env.test
 .env.local
 .env.*.local
 

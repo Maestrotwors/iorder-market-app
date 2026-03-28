@@ -1,0 +1,129 @@
+# iOrder Market — Per-service ArgoCD ApplicationSet
+# Creates independent ArgoCD Applications for each microservice and infra layer.
+# Each Application deploys only its own resources by toggling enabled flags.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: iorder-market
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          # Infrastructure: PostgreSQL, RedPanda, Secrets, ConfigMap, Ingress, NetworkPolicies, PDB, Monitoring
+          - name: infra
+            frontendEnabled: "false"
+            apiGatewayEnabled: "false"
+            productsServiceEnabled: "false"
+            authServiceEnabled: "false"
+            postgresqlEnabled: "true"
+            redpandaEnabled: "true"
+            redpandaConsoleEnabled: "true"
+            pdbEnabled: "true"
+            networkPoliciesEnabled: "true"
+            monitoringEnabled: "true"
+            ingressEnabled: "true"
+          # Angular frontend (Nginx)
+          - name: frontend
+            frontendEnabled: "true"
+            apiGatewayEnabled: "false"
+            productsServiceEnabled: "false"
+            authServiceEnabled: "false"
+            postgresqlEnabled: "false"
+            redpandaEnabled: "false"
+            redpandaConsoleEnabled: "false"
+            pdbEnabled: "false"
+            networkPoliciesEnabled: "false"
+            monitoringEnabled: "false"
+            ingressEnabled: "false"
+          # API Gateway — reverse proxy, JWT verification, routing
+          - name: api-gateway
+            frontendEnabled: "false"
+            apiGatewayEnabled: "true"
+            productsServiceEnabled: "false"
+            authServiceEnabled: "false"
+            postgresqlEnabled: "false"
+            redpandaEnabled: "false"
+            redpandaConsoleEnabled: "false"
+            pdbEnabled: "false"
+            networkPoliciesEnabled: "false"
+            monitoringEnabled: "false"
+            ingressEnabled: "false"
+          # Products CRUD microservice
+          - name: products-service
+            frontendEnabled: "false"
+            apiGatewayEnabled: "false"
+            productsServiceEnabled: "true"
+            authServiceEnabled: "false"
+            postgresqlEnabled: "false"
+            redpandaEnabled: "false"
+            redpandaConsoleEnabled: "false"
+            pdbEnabled: "false"
+            networkPoliciesEnabled: "false"
+            monitoringEnabled: "false"
+            ingressEnabled: "false"
+          # Authentication microservice (Better Auth, JWT, JWKS)
+          - name: auth-service
+            frontendEnabled: "false"
+            apiGatewayEnabled: "false"
+            productsServiceEnabled: "false"
+            authServiceEnabled: "true"
+            postgresqlEnabled: "false"
+            redpandaEnabled: "false"
+            redpandaConsoleEnabled: "false"
+            pdbEnabled: "false"
+            networkPoliciesEnabled: "false"
+            monitoringEnabled: "false"
+            ingressEnabled: "false"
+  template:
+    metadata:
+      name: "iorder-{{name}}"
+      namespace: argocd
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/Maestrotwors/iorder-market-app.git
+        targetRevision: main
+        path: infrastructure/helm/iorder
+        helm:
+          valueFiles:
+            - values.yaml
+            - values-dev.yaml
+          parameters:
+            - name: frontend.enabled
+              value: "{{frontendEnabled}}"
+            - name: apiGateway.enabled
+              value: "{{apiGatewayEnabled}}"
+            - name: productsService.enabled
+              value: "{{productsServiceEnabled}}"
+            - name: authService.enabled
+              value: "{{authServiceEnabled}}"
+            - name: postgresql.enabled
+              value: "{{postgresqlEnabled}}"
+            - name: redpanda.enabled
+              value: "{{redpandaEnabled}}"
+            - name: redpandaConsole.enabled
+              value: "{{redpandaConsoleEnabled}}"
+            - name: pdb.enabled
+              value: "{{pdbEnabled}}"
+            - name: networkPolicies.enabled
+              value: "{{networkPoliciesEnabled}}"
+            - name: monitoring.enabled
+              value: "{{monitoringEnabled}}"
+            - name: ingress.enabled
+              value: "{{ingressEnabled}}"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: default
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
+          - PrunePropagationPolicy=foreground
+        retry:
+          limit: 3
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 1m
