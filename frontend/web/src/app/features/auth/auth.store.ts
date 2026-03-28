@@ -1,7 +1,7 @@
 import { computed, inject } from '@angular/core';
 import { signalStore, withState, withComputed, withMethods, patchState } from '@ngrx/signals';
-import { AuthService } from '@shared';
-import type { BetterAuthUser } from '@shared';
+import { AuthService } from '@shared/api/auth.service';
+import type { BetterAuthUser } from '@shared/types/auth.types';
 
 export interface AuthState {
   user: BetterAuthUser | null;

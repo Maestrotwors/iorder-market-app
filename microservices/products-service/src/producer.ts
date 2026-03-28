@@ -1,9 +1,14 @@
-import { Kafka, type Producer } from 'kafkajs';
+import { Kafka, logLevel, type Producer } from 'kafkajs';
 import { config } from '../../../config';
 
 const kafka = new Kafka({
   clientId: 'products-service',
   brokers: config.redpanda.brokers,
+  logLevel: logLevel.NOTHING,
+  retry: {
+    retries: 1,
+    initialRetryTime: 200,
+  },
 });
 
 let producer: Producer | null = null;
@@ -25,18 +30,20 @@ export async function publishEvent(
   }
 
   try {
+    const value = JSON.stringify(payload);
     await producer.send({
       topic,
       messages: [
         {
           key,
-          value: JSON.stringify(payload),
+          value,
           timestamp: Date.now().toString(),
         },
       ],
     });
+    console.log(`[Producer] → ${topic} | key=${key} | payload=${value}`);
   } catch (error) {
-    console.error(`Failed to publish event to ${topic}:`, error);
+    console.error(`[Producer] Failed to publish to ${topic}:`, error);
   }
 }
 

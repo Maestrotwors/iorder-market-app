@@ -5,6 +5,7 @@ import { initTracer, observabilityPlugin } from '@iorder/shared-observability';
 import { productRoutes } from './routes/products';
 import { metricsPlugin } from './metrics';
 import { initProducer } from './producer';
+import { initConsumer } from './consumer';
 import * as z from 'zod';
 
 const SERVICE_NAME = 'products-service';
@@ -62,6 +63,8 @@ app
   .use(productRoutes);
 
 initProducer().catch((err) => console.warn('RedPanda producer init failed (non-critical):', err));
+
+initConsumer().catch((err) => console.error('RedPanda consumer init failed:', err));
 
 app.listen(port);
 

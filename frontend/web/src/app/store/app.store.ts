@@ -1,4 +1,4 @@
-import { signalStore, withState, withMethods, patchState } from '@ngrx/signals';
+import { signalStore, withState, withMethods } from '@ngrx/signals';
 
 export interface AppState {
   theme: 'light' | 'dark';
@@ -13,12 +13,5 @@ const initialState: AppState = {
 export const AppStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
-  withMethods((store) => ({
-    markInitialized(): void {
-      patchState(store, { initialized: true });
-    },
-    toggleTheme(): void {
-      patchState(store, { theme: store.theme() === 'light' ? 'dark' : 'light' });
-    },
-  })),
+  withMethods(() => ({})),
 );
