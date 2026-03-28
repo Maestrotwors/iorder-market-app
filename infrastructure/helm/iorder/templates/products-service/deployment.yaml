@@ -22,6 +22,8 @@ spec:
       labels:
         {{- include "iorder.labels" . | nindent 8 }}
         {{- include "iorder.selectorLabels" (dict "service" "products-service" "context" .) | nindent 8 }}
+      annotations:
+        deploy/timestamp: {{ .Values.productsService.deployTimestamp | default "initial" | quote }}
     spec:
       topologySpreadConstraints:
         - maxSkew: 1
