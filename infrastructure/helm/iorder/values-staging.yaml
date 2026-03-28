@@ -5,6 +5,7 @@ global:
   namespace: iorder-staging
 
 apiGateway:
+  enabled: true
   replicaCount: 1
   image:
     pullPolicy: Always
@@ -12,6 +13,7 @@ apiGateway:
     enabled: false
 
 productsService:
+  enabled: true
   replicaCount: 2
   image:
     pullPolicy: Always
@@ -21,6 +23,7 @@ productsService:
     maxReplicas: 5
 
 authService:
+  enabled: true
   replicaCount: 2
   image:
     pullPolicy: Always

@@ -5,6 +5,7 @@ global:
   namespace: iorder-prod
 
 apiGateway:
+  enabled: true
   replicaCount: 1
   image:
     pullPolicy: Always
@@ -15,6 +16,7 @@ apiGateway:
     targetCPUUtilization: 70
 
 productsService:
+  enabled: true
   replicaCount: 3
   image:
     pullPolicy: Always
@@ -24,6 +26,7 @@ productsService:
     maxReplicas: 10
 
 authService:
+  enabled: true
   replicaCount: 3
   image:
     pullPolicy: Always

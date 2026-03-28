@@ -4,79 +4,131 @@
  * Usage: bun scripts/generate-env.ts
  *
  * Outputs:
- *   .env.db     — for docker-compose.db.yml (PostgreSQL)
- *   .env        — for local dev (ports only, hosts = localhost)
- *   .env.docker — for docker-compose services (hosts = service names)
+ *   .env        — local dev (hosts = localhost)
+ *   .env.docker — docker-compose.dev.yml (hosts = service names)
+ *   .env.test   — docker-compose.test.yml (hosts = service names, test DB)
  */
 
 import ports from '../config/ports.json';
 
-const { postgresql, redpanda, redpandaConsole } = ports.infrastructure;
+const { postgresql, redis, redpanda, redpandaConsole } = ports.infrastructure;
 const { services, apps, kubernetes } = ports;
 
-// .env.db — PostgreSQL container
-const envDb = `# Auto-generated from config/ports.json — do not edit manually
-POSTGRES_DB=${postgresql.database}
-POSTGRES_USER=${postgresql.username}
-POSTGRES_PASSWORD=${postgresql.password}
-DB_PORT=${postgresql.port}
-`;
+/** Internal Kafka port for docker network communication (external = redpanda.kafka) */
+const KAFKA_INTERNAL_PORT = 9092;
 
-// .env — local dev (no HOST overrides, config/index.ts defaults to localhost)
-const envLocal = `# Auto-generated from config/ports.json — do not edit manually
-# Hosts default to localhost (see config/index.ts)
+interface EnvOptions {
+  runtime?: string;
+  nodeEnv: string;
+  /** 'localhost' for local dev, 'docker' for container service names */
+  hostMode: 'localhost' | 'docker';
+  dbName: string;
+  jwtSecret: string;
+  otelEndpoint: string;
+}
 
-# Service ports
-API_GATEWAY_PORT=${services.apiGateway.port}
-PRODUCTS_SERVICE_PORT=${services.products.port}
-AUTH_SERVICE_PORT=${services.auth.port}
+function generateEnv(label: string, opts: EnvOptions): string {
+  const host = (serviceHost: string) => (opts.hostMode === 'docker' ? serviceHost : 'localhost');
 
-# App ports
-WEB_PORT=${apps.web.port}
-ADMIN_PORT=${apps.admin.port}
+  const dbHost = host(postgresql.host);
+  const dbUrl = `postgresql://${postgresql.username}:${postgresql.password}@${dbHost}:${postgresql.port}/${opts.dbName}`;
+  const rpBrokers =
+    opts.hostMode === 'docker'
+      ? `${redpanda.host}:${KAFKA_INTERNAL_PORT}`
+      : `localhost:${redpanda.kafka}`;
 
-# PostgreSQL (localhost for local dev)
-DATABASE_URL=postgresql://${postgresql.username}:${postgresql.password}@localhost:${postgresql.port}/${postgresql.database}
+  const lines: string[] = [
+    `# Auto-generated from config/ports.json — do not edit manually`,
+    `# Environment: ${label}`,
+    '',
+  ];
 
-# RedPanda
-REDPANDA_BROKERS=localhost:${redpanda.kafka}
-REDPANDA_KAFKA_PORT=${redpanda.kafka}
-REDPANDA_SCHEMA_PORT=${redpanda.schemaRegistry}
-REDPANDA_PROXY_PORT=${redpanda.restProxy}
-REDPANDA_CONSOLE_PORT=${redpandaConsole.port}
+  if (opts.runtime) lines.push(`RUNTIME=${opts.runtime}`);
+  lines.push(`NODE_ENV=${opts.nodeEnv}`);
 
-# Kubernetes
-FRONTEND_NODE_PORT=${kubernetes.frontendNodePort}
-`;
+  lines.push('', '# Services');
+  lines.push(`API_GATEWAY_HOST=${host(services.apiGateway.host)}`);
+  lines.push(`API_GATEWAY_PORT=${services.apiGateway.port}`);
+  lines.push(`PRODUCTS_SERVICE_HOST=${host(services.products.host)}`);
+  lines.push(`PRODUCTS_SERVICE_PORT=${services.products.port}`);
+  lines.push(`AUTH_SERVICE_HOST=${host(services.auth.host)}`);
+  lines.push(`AUTH_SERVICE_PORT=${services.auth.port}`);
 
-// .env.docker — for docker-compose services (hosts = service names)
-const envDocker = `# Auto-generated from config/ports.json — do not edit manually
-# Used by: docker-compose.yml services
+  lines.push('', '# Apps');
+  lines.push(`WEB_PORT=${apps.web.port}`);
+  lines.push(`ADMIN_PORT=${apps.admin.port}`);
 
-RUNTIME=docker
+  lines.push('', '# Database');
+  lines.push(`DATABASE_HOST=${dbHost}`);
+  lines.push(`DATABASE_PORT=${postgresql.port}`);
+  lines.push(`DATABASE_NAME=${opts.dbName}`);
+  lines.push(`DATABASE_USERNAME=${postgresql.username}`);
+  lines.push(`DATABASE_PASSWORD=${postgresql.password}`);
+  lines.push(`DATABASE_URL=${dbUrl}`);
+  lines.push(`POSTGRES_DB=${opts.dbName}`);
+  lines.push(`POSTGRES_USER=${postgresql.username}`);
+  lines.push(`POSTGRES_PASSWORD=${postgresql.password}`);
 
-API_GATEWAY_HOST=${services.apiGateway.host}
-API_GATEWAY_PORT=${services.apiGateway.port}
-PRODUCTS_SERVICE_HOST=${services.products.host}
-PRODUCTS_SERVICE_PORT=${services.products.port}
-AUTH_SERVICE_HOST=${services.auth.host}
-AUTH_SERVICE_PORT=${services.auth.port}
+  lines.push('', '# Redis');
+  lines.push(`REDIS_HOST=${host(redis.host)}`);
+  lines.push(`REDIS_PORT=${redis.port}`);
+  lines.push(`REDIS_PASSWORD=${redis.password}`);
+  lines.push(`REDIS_URL=redis://:${redis.password}@${host(redis.host)}:${redis.port}`);
 
-DATABASE_HOST=${postgresql.host}
-DATABASE_PORT=${postgresql.port}
-DATABASE_NAME=${postgresql.database}
-DATABASE_USERNAME=${postgresql.username}
-DATABASE_PASSWORD=${postgresql.password}
-DATABASE_URL=postgresql://${postgresql.username}:${postgresql.password}@${postgresql.host}:${postgresql.port}/${postgresql.database}
+  lines.push('', '# RedPanda');
+  lines.push(`REDPANDA_BROKERS=${rpBrokers}`);
+  lines.push(`REDPANDA_KAFKA_PORT=${redpanda.kafka}`);
+  lines.push(`REDPANDA_SCHEMA_PORT=${redpanda.schemaRegistry}`);
+  lines.push(`REDPANDA_PROXY_PORT=${redpanda.restProxy}`);
+  lines.push(`REDPANDA_CONSOLE_PORT=${redpandaConsole.port}`);
 
-REDPANDA_BROKERS=${redpanda.host}:${redpanda.kafka}
-`;
+  lines.push('', '# JWT');
+  lines.push(`JWT_SECRET=${opts.jwtSecret}`);
+  lines.push(`JWT_EXPIRATION=3600`);
 
-await Bun.write('.env.db', envDb);
+  lines.push('', '# Observability');
+  lines.push(`OTEL_EXPORTER_OTLP_ENDPOINT=${opts.otelEndpoint}`);
+
+  lines.push('', '# Kubernetes');
+  lines.push(`FRONTEND_NODE_PORT=${kubernetes.frontendNodePort}`);
+  lines.push('');
+
+  return lines.join('\n');
+}
+
+// --- Generate all env files ---
+
+const envLocal = generateEnv('local dev', {
+  nodeEnv: 'development',
+  hostMode: 'localhost',
+  dbName: postgresql.database,
+  jwtSecret: 'dev-secret-change-in-production-at-least-32-chars',
+  otelEndpoint: 'http://localhost:4318',
+});
+
+const envDocker = generateEnv('docker dev', {
+  runtime: 'docker',
+  nodeEnv: 'development',
+  hostMode: 'docker',
+  dbName: postgresql.database,
+  jwtSecret: 'dev-secret-change-in-production-at-least-32-chars',
+  otelEndpoint: 'http://localhost:4318',
+});
+
+const envTest = generateEnv('docker test', {
+  runtime: 'docker',
+  nodeEnv: 'test',
+  hostMode: 'docker',
+  dbName: 'iorder_test',
+  jwtSecret: 'test-secret-must-be-32-chars-long!!',
+  otelEndpoint: 'http://localhost:4318',
+});
+
 await Bun.write('.env', envLocal);
 await Bun.write('.env.docker', envDocker);
+await Bun.write('.env.test', envTest);
 
-console.log('Generated:');
-console.log('  .env        — Local dev (hosts = localhost)');
-console.log('  .env.db     — PostgreSQL container');
-console.log('  .env.docker — Docker Compose services (hosts = service names)');
+console.log('Generated from config/ports.json:');
+console.log('  .env        — local dev (hosts = localhost)');
+console.log('  .env.docker — Docker Compose dev (hosts = service names)');
+console.log('  .env.test   — Docker Compose test (hosts = service names, test DB)');

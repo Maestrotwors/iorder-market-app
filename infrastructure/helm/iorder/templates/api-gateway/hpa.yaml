@@ -1,4 +1,4 @@
-{{- if .Values.apiGateway.hpa.enabled }}
+{{- if and .Values.apiGateway.enabled .Values.apiGateway.hpa.enabled }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
