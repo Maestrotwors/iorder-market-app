@@ -22,6 +22,13 @@ spec:
         {{- include "iorder.labels" . | nindent 8 }}
         {{- include "iorder.selectorLabels" (dict "service" "products-service" "context" .) | nindent 8 }}
     spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: products-service
       terminationGracePeriodSeconds: 30
       containers:
         - name: products-service
