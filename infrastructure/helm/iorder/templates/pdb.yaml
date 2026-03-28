@@ -13,6 +13,7 @@ spec:
     matchLabels:
       {{- include "iorder.selectorLabels" (dict "service" "api-gateway" "context" .) | nindent 6 }}
 {{- end }}
+{{- if .Values.pdb.productsService }}
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
@@ -25,6 +26,8 @@ spec:
   selector:
     matchLabels:
       {{- include "iorder.selectorLabels" (dict "service" "products-service" "context" .) | nindent 6 }}
+{{- end }}
+{{- if .Values.pdb.authService }}
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
@@ -37,4 +40,19 @@ spec:
   selector:
     matchLabels:
       {{- include "iorder.selectorLabels" (dict "service" "auth-service" "context" .) | nindent 6 }}
+{{- end }}
+{{- if .Values.pdb.frontend }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "iorder.fullname" . }}-frontend
+  labels:
+    {{- include "iorder.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.pdb.frontend.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "iorder.selectorLabels" (dict "service" "frontend" "context" .) | nindent 6 }}
+{{- end }}
 {{- end }}

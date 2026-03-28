@@ -40,6 +40,10 @@ postgresql:
 
 pdb:
   enabled: true
+  frontend:
+    minAvailable: 1
+  apiGateway:
+    minAvailable: 1
   productsService:
     minAvailable: 1
   authService:

@@ -1,0 +1,68 @@
+{
+  "folders": [
+    {
+      "name": "Frontend (Angular)",
+      "path": "frontend/web",
+    },
+    {
+      "name": "Microservices",
+      "path": "microservices",
+    },
+    {
+      "name": "Shared Packages",
+      "path": "packages",
+    },
+    {
+      "name": "Database",
+      "path": "database",
+    },
+    {
+      "name": "Infrastructure",
+      "path": "infrastructure",
+    },
+    {
+      "name": "Config & Root",
+      "path": ".",
+    },
+  ],
+  "settings": {
+    "peacock.affectActivityBar": true,
+    "peacock.affectStatusBar": true,
+    "peacock.affectTitleBar": true,
+    "peacock.affectTabActiveBorder": true,
+    "peacock.elementAdjustments": {
+      "activityBar": "lighten",
+      "statusBar": "none",
+      "titleBar": "none",
+    },
+    "peacock.favoriteColors": [
+      { "name": "Frontend (Angular)", "value": "#dd0531" },
+      { "name": "Microservices", "value": "#1a8f3c" },
+      { "name": "Shared Packages", "value": "#9b59b6" },
+      { "name": "Database", "value": "#e67e22" },
+      { "name": "Infrastructure", "value": "#2980b9" },
+      { "name": "Config & Root", "value": "#607d8b" },
+    ],
+    "peacock.color": "#1a8f3c",
+    "workbench.colorCustomizations": {
+      "activityBar.activeBackground": "#22ba4e",
+      "activityBar.background": "#22ba4e",
+      "activityBar.foreground": "#15202b",
+      "activityBar.inactiveForeground": "#15202b99",
+      "activityBarBadge.background": "#eae4fa",
+      "activityBarBadge.foreground": "#15202b",
+      "commandCenter.border": "#e7e7e799",
+      "sash.hoverBorder": "#22ba4e",
+      "statusBar.background": "#1a8f3c",
+      "statusBar.foreground": "#e7e7e7",
+      "statusBarItem.hoverBackground": "#22ba4e",
+      "statusBarItem.remoteBackground": "#1a8f3c",
+      "statusBarItem.remoteForeground": "#e7e7e7",
+      "tab.activeBorder": "#22ba4e",
+      "titleBar.activeBackground": "#1a8f3c",
+      "titleBar.activeForeground": "#e7e7e7",
+      "titleBar.inactiveBackground": "#1a8f3c99",
+      "titleBar.inactiveForeground": "#e7e7e799",
+    },
+  },
+}

@@ -65,6 +65,8 @@ postgresql:
 
 # --- RedPanda ---
 redpanda:
+  topics:
+    partitions: 3
   resources: {}
 
 # --- RedPanda Console ---

@@ -12,19 +12,34 @@ frontend:
     repository: iorder/frontend
     tag: latest
     pullPolicy: IfNotPresent
-  resources: {}
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
 
 # --- API Gateway ---
 apiGateway:
-  replicaCount: 1
+  replicaCount: 2
   image:
     repository: iorder/api-gateway
     tag: latest
     pullPolicy: IfNotPresent
   port: 3000
-  resources: {}
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
   hpa:
-    enabled: false
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilization: 70
 
 # --- Products Service ---
 productsService:
@@ -34,7 +49,13 @@ productsService:
     tag: latest
     pullPolicy: IfNotPresent
   port: 3001
-  resources: {}
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
   hpa:
     enabled: true
     minReplicas: 3
@@ -49,7 +70,13 @@ authService:
     tag: latest
     pullPolicy: IfNotPresent
   port: 3002
-  resources: {}
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
   hpa:
     enabled: true
     minReplicas: 3
@@ -80,7 +107,13 @@ postgresql:
   storage:
     size: 10Gi
     storageClass: ""
-  resources: {}
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
 
 # --- RedPanda ---
 redpanda:
@@ -95,7 +128,15 @@ redpanda:
     port: 18081
   restProxy:
     port: 18082
-  resources: {}
+  topics:
+    partitions: 9
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
 
 # --- RedPanda Console (UI) ---
 redpandaConsole:
@@ -104,7 +145,13 @@ redpandaConsole:
     repository: redpandadata/console
     tag: "latest"
     pullPolicy: IfNotPresent
-  resources: {}
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
 
 # --- Secrets ---
 secrets:
@@ -125,6 +172,10 @@ networkPolicies:
 # --- PDB ---
 pdb:
   enabled: true
+  frontend:
+    minAvailable: 1
+  apiGateway:
+    minAvailable: 1
   productsService:
     minAvailable: 2
   authService:
