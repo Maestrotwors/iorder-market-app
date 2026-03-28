@@ -7,7 +7,7 @@ global:
 # --- Frontend ---
 frontend:
   enabled: true
-  replicaCount: 3
+  replicaCount: 2
   image:
     repository: iorder/frontend
     tag: latest

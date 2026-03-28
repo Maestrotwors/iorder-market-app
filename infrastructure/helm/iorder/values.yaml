@@ -7,7 +7,7 @@ global:
 # --- Frontend (Angular + Nginx) ---
 frontend:
   enabled: true
-  replicaCount: 3
+  replicaCount: 2
   image:
     repository: iorder/frontend
     tag: latest
@@ -127,6 +127,10 @@ networkPolicies:
 # --- PDB ---
 pdb:
   enabled: true
+  frontend:
+    minAvailable: 1
+  apiGateway:
+    minAvailable: 1
   productsService:
     minAvailable: 2
   authService:
