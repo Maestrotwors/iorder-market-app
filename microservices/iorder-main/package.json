@@ -1,0 +1,18 @@
+{
+  "name": "@iorder/iorder-main",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "elysia": "^1.2.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "vitest": "^4.1.2"
+  }
+}

@@ -11,6 +11,7 @@ Create a new NgRx Signal Store.
 ## Arguments
 
 The user provides the store name and optionally the scope. Parse the arguments:
+
 - First argument: store name (e.g., `product`, `cart`, `auth`)
 - Second argument (optional): scope — `local` (component-level) or `global` (providedIn root). Default: `local`
 - Third argument (optional): path relative to `frontend/web/src/app/`
@@ -84,6 +85,7 @@ export const {{PascalName}}Store = signalStore(
 ```
 
 Usage in component:
+
 ```typescript
 @Component({
   // ...
@@ -201,13 +203,14 @@ export const ProductStore = signalStore(
     updateProduct(id: string, changes: Partial<IProduct>) {
       patchState(store, updateEntity({ id, changes }));
     },
-  }))
+  })),
 );
 ```
 
 ## Global User Store (reference)
 
 The global user store at `frontend/web/src/app/core/stores/auth.store.ts` holds:
+
 - Current user info (`IUser | null`)
 - Authentication state (`isAuthenticated`, `userRole`)
 - Login/logout methods

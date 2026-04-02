@@ -11,6 +11,7 @@ Create an Angular Signal Form. **All forms in this project use Signal Forms excl
 ## Arguments
 
 The user describes what form they need. Parse the context:
+
 - What entity/action the form is for (e.g., login, product creation, address editing)
 - Where to add it (existing component, new component, store)
 - What fields are needed
@@ -62,12 +63,12 @@ onSubmit(event: Event) {
 
 **CRITICAL rules:**
 
-| Rule | Wrong | Correct |
-|------|-------|---------|
-| Never `null` in model | `signal({ x: null })` | `signal({ x: '' })` |
-| Field flags are functions | `form.field.valid` | `form.field().valid()` |
-| No native attrs with `[formField]` | `[formField]="f" [disabled]="x"` | Use `disabled()` from signals |
-| `submit()` must be async | `submit(f, { action: () => {} })` | `submit(f, { action: async () => {} })` |
+| Rule                               | Wrong                             | Correct                                 |
+| ---------------------------------- | --------------------------------- | --------------------------------------- |
+| Never `null` in model              | `signal({ x: null })`             | `signal({ x: '' })`                     |
+| Field flags are functions          | `form.field.valid`                | `form.field().valid()`                  |
+| No native attrs with `[formField]` | `[formField]="f" [disabled]="x"`  | Use `disabled()` from signals           |
+| `submit()` must be async           | `submit(f, { action: () => {} })` | `submit(f, { action: async () => {} })` |
 
 Available validators: `required`, `email`, `min`, `max`, `minLength`, `maxLength`, `pattern`
 Available modifiers: `disabled`, `hidden`, `readonly`, `debounce`, `applyWhen`, `applyEach`, `metadata`

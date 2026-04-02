@@ -1,0 +1,14 @@
+{
+  "ignore": ["wallaby.js"],
+  "workspaces": {
+    "frontend/web": {
+      "project": ["src/**/*.ts"],
+      "ignore": ["src/test-setup.ts"],
+      "ignoreDependencies": ["@analogjs/vitest-angular", "@angular/forms"],
+      "vitest": false
+    },
+    "microservices/iorder-main": {
+      "project": ["src/**/*.ts"]
+    }
+  }
+}

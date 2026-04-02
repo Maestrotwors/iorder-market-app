@@ -11,9 +11,8 @@ You are an expert in TypeScript, Angular 21+, SCSS, RxJS, NgRx Signal Store, and
 
 ## Зона ответственности
 
-- `frontend/web/` — Angular приложение (customer, supplier, admin)
-- `packages/shared-ui/` — переиспользуемые Angular-компоненты
-- `packages/shared-logic/` — бизнес-логика, общая для web и mobile
+- `frontend/web/` — Angular приложение (public, customer, supplier, admin)
+- `frontend/web/src/app/ui/` — shared UI компоненты
 
 ## Технологический стек
 
@@ -29,79 +28,35 @@ You are an expert in TypeScript, Angular 21+, SCSS, RxJS, NgRx Signal Store, and
 
 ---
 
-## Текущее состояние приложения
-
-### Реализовано
-- Auth flow (login, register, session management) через Better Auth
-- Role-based routing (customer, supplier, admin) с roleGuard
-- Global stores: AuthStore (user, isAuthenticated, userRole), AppStore (theme, initialized)
-- Feature stores: LoginStore, RegisterStore (local, component-scoped)
-- UI компоненты: UiButtonComponent (variants, sizes, loading), UiInputComponent (label, error)
-- Auth guard (roleGuard) — проверяет роль через AuthStore
-- Auth service (login, register, logout, getSession) — cookie-based, withCredentials
-
-### Готово к разработке (stubs/empty)
-- Customer dashboard (pages/customer/ — stub)
-- Supplier dashboard (pages/supplier/ — stub)
-- Admin dashboard (pages/admin/ — stub)
-- Widgets layer (пусто)
-- Entities layer (пусто)
-- Product catalog, cart, orders — ещё не реализованы
-- SSE/WebSocket интеграция — ещё не реализована
-
-### Структура приложения
+## Структура доменов приложения
 
 ```
 frontend/web/src/app/
-├── pages/                    # Lazy-loaded routes
-│   ├── landing/              # Лендинг + home
-│   │   ├── landing.component.ts  # Layout (<router-outlet/>)
-│   │   └── home/landing-home.component.ts  # Hero page
-│   ├── customer/customer.component.ts  # Stub
-│   ├── supplier/supplier.component.ts  # Stub
-│   └── admin/admin.component.ts        # Stub
+├── public/                   # Публичные страницы (без авторизации)
+│   └── pages/                # Landing, about, etc.
 │
-├── widgets/                  # Составные UI-блоки (пусто)
+├── customer/                 # Домен покупателя
+│   └── pages/                # Каталог, корзина, заказы, профиль
 │
-├── features/                 # Действия пользователя + store
-│   └── auth/
-│       ├── auth.store.ts     # Global: user, isAuthenticated, userRole, userName
-│       ├── login/
-│       │   ├── login.component.ts   # Inline template/styles, FormsModule (ngModel)
-│       │   └── login.store.ts       # Local: loading, error, login()
-│       └── register/
-│           ├── register.component.ts # Inline template/styles, FormsModule (ngModel)
-│           └── register.store.ts     # Local: loading, error, register()
+├── supplier/                 # Домен поставщика
+│   └── pages/                # Управление товарами, заказы, аналитика
 │
-├── shared/
-│   ├── api/auth.service.ts   # login, register, logout, getSession (cookie-based)
-│   ├── guards/auth.guard.ts  # roleGuard(allowedRole: string)
-│   └── types/auth.types.ts   # BetterAuthUser, SessionResponse, SignUpResponse
+├── admin/                    # Домен администратора
+│   └── pages/                # Пользователи, модерация, настройки
 │
-├── store/app.store.ts        # Global: theme, initialized, toggleTheme()
-│
-├── ui/                       # Локальные UI компоненты
-│   ├── button/button.component.ts  # CSS var theming, variants, loading
-│   └── input/input.component.ts    # CSS var theming, label, error
-│
-├── schemas/                  # Frontend-only Zod (пусто)
+├── ui/                       # Shared UI компоненты (button, input, card, modal, etc.)
 │
 ├── app.config.ts             # provideZonelessChangeDetection, provideRouter, provideHttpClient(withFetch())
-├── app.routes.ts             # / (landing), /customer, /supplier, /admin с roleGuard
-└── app.ts                    # Root component (nav + router-outlet)
+├── app.routes.ts             # Lazy routes: /, /customer/*, /supplier/*, /admin/*
+└── app.ts                    # Root component
 ```
 
-### Path aliases (tsconfig.json)
-```
-@iorder/shared-contracts → packages/shared-contracts/src/index.ts
-@pages    → frontend/web/src/app/pages/index.ts
-@features → frontend/web/src/app/features/index.ts
-@widgets  → frontend/web/src/app/widgets/index.ts
-@shared   → frontend/web/src/app/shared/index.ts
-@store    → frontend/web/src/app/store/index.ts
-@ui       → frontend/web/src/app/ui/index.ts
-@schemas  → frontend/web/src/app/schemas/index.ts
-```
+### Правила доменов
+
+- Каждый домен (public, customer, supplier, admin) **изолирован** — не импортирует из других доменов
+- Общий код только через `ui/`
+- Внутри домена: `pages/` содержит route-компоненты, рядом могут быть `features/`, `widgets/`, `services/`
+- Lazy loading на уровне доменов через `loadChildren` в app.routes.ts
 
 ---
 
@@ -147,10 +102,13 @@ afterRenderEffect({
     return true; // pass to next phase
   },
   read: (didWrite, onCleanup) => {
-    if (didWrite()) { this.height = el.nativeElement.getBoundingClientRect().height; }
+    if (didWrite()) {
+      this.height = el.nativeElement.getBoundingClientRect().height;
+    }
   },
 });
 ```
+
 - Use `linkedSignal()` for dependent resettable state (e.g., a selected item that resets when a list changes).
 - Use `model()` for two-way binding between parent and child components.
 - Use `input()` and `output()` functions instead of `@Input()` and `@Output()` decorators.
@@ -183,7 +141,7 @@ user = httpResource(() => ({
   url: `/api/user/${this.userId()}`,
   method: 'GET',
   headers: { 'X-Special': 'true' },
-  params: { 'fast': 'yes' },
+  params: { fast: 'yes' },
 }));
 
 // Response parsing with Zod
@@ -201,11 +159,11 @@ blobData = httpResource.blob(() => `/api/file`);
 ```html
 <!-- Template pattern: always guard value reads -->
 @if (user.hasValue()) {
-  <user-details [user]="user.value()" />
+<user-details [user]="user.value()" />
 } @else if (user.error()) {
-  <div>Could not load user</div>
+<div>Could not load user</div>
 } @else if (user.isLoading()) {
-  <div>Loading...</div>
+<div>Loading...</div>
 }
 ```
 
@@ -280,15 +238,15 @@ protected readonly myForm = form(this.formModel, (field) => {
 
 **CRITICAL Signal Forms rules (common bugs):**
 
-| Rule | Wrong | Correct |
-|------|-------|---------|
-| Never use `null` in model | `signal({ name: null })` | `signal({ name: '' })` |
-| Access field flags by calling as function | `form.field.valid` | `form.field().valid()` |
-| `[formField]` cannot coexist with native attrs | `<input [formField]="f" [disabled]="x">` | Use `disabled()` constraint from signals |
-| `submit()` callback must be `async` | `submit(f, (v) => save(v))` | `submit(f, async (v) => await save(v))` |
-| `onError` in `validateAsync` is required | `validateAsync(fn)` | `validateAsync(fn, { onError: 'invalid' })` |
-| `applyEach` callback takes exactly 1 arg | `applyEach((f, i) => ...)` | `applyEach((f) => ...)` |
-| No `$parent.$index` in Angular | `$parent.$index` | `let outerIndex = $index` before nested `@for` |
+| Rule                                           | Wrong                                    | Correct                                        |
+| ---------------------------------------------- | ---------------------------------------- | ---------------------------------------------- |
+| Never use `null` in model                      | `signal({ name: null })`                 | `signal({ name: '' })`                         |
+| Access field flags by calling as function      | `form.field.valid`                       | `form.field().valid()`                         |
+| `[formField]` cannot coexist with native attrs | `<input [formField]="f" [disabled]="x">` | Use `disabled()` constraint from signals       |
+| `submit()` callback must be `async`            | `submit(f, (v) => save(v))`              | `submit(f, async (v) => await save(v))`        |
+| `onError` in `validateAsync` is required       | `validateAsync(fn)`                      | `validateAsync(fn, { onError: 'invalid' })`    |
+| `applyEach` callback takes exactly 1 arg       | `applyEach((f, i) => ...)`               | `applyEach((f) => ...)`                        |
+| No `$parent.$index` in Angular                 | `$parent.$index`                         | `let outerIndex = $index` before nested `@for` |
 
 Available validators: `required`, `email`, `min`, `max`, `minLength`, `maxLength`, `pattern`
 Available modifiers: `disabled`, `hidden`, `readonly`, `debounce`, `applyWhen`, `applyEach`, `metadata`
@@ -313,10 +271,14 @@ import { addEntity, removeEntities, updateAllEntities, withEntities } from '@ngr
 type Todo = { id: number; text: string; completed: boolean };
 
 export const TodosStore = signalStore(
-  withEntities<Todo>(),  // adds: ids, entityMap, entities signals
+  withEntities<Todo>(), // adds: ids, entityMap, entities signals
   withMethods((store) => ({
     addTodo: (todo: Todo) => patchState(store, addEntity(todo)),
-    removeEmpty: () => patchState(store, removeEntities(({ text }) => !text)),
+    removeEmpty: () =>
+      patchState(
+        store,
+        removeEntities(({ text }) => !text),
+      ),
     completeAll: () => patchState(store, updateAllEntities({ completed: true })),
   })),
 );
@@ -336,12 +298,17 @@ export const BookSearchStore = signalStore(
         debounceTime(300),
         distinctUntilChanged(),
         tap(() => patchState(store, { isLoading: true })),
-        switchMap((query) => booksService.getByQuery(query).pipe(
-          tapResponse({
-            next: (books) => patchState(store, { books, isLoading: false }),
-            error: (err) => { patchState(store, { isLoading: false }); console.error(err); },
-          }),
-        )),
+        switchMap((query) =>
+          booksService.getByQuery(query).pipe(
+            tapResponse({
+              next: (books) => patchState(store, { books, isLoading: false }),
+              error: (err) => {
+                patchState(store, { isLoading: false });
+                console.error(err);
+              },
+            }),
+          ),
+        ),
       ),
     ),
   })),
@@ -352,7 +319,7 @@ export const BookSearchStore = signalStore(
 
 ```typescript
 const store = TestBed.inject(CounterStore);
-store.increment(of(1, 2, 3));       // synchronous observable
+store.increment(of(1, 2, 3)); // synchronous observable
 expect(store.count()).toBe(6);
 
 store.increment(scheduled([1], asyncScheduler)); // async
@@ -380,21 +347,17 @@ await expect.poll(() => store.count()).toBe(7);
 
 ```html
 @if (user()) {
-  <h1>{{ user().name }}</h1>
+<h1>{{ user().name }}</h1>
 } @else {
-  <p>Loading...</p>
-}
-
-@for (item of items(); track item.id) {
-  <app-item [item]="item" />
+<p>Loading...</p>
+} @for (item of items(); track item.id) {
+<app-item [item]="item" />
 } @empty {
-  <p>No items found.</p>
-}
-
-@defer (on viewport) {
-  <app-heavy-chart [data]="chartData()" />
+<p>No items found.</p>
+} @defer (on viewport) {
+<app-heavy-chart [data]="chartData()" />
 } @placeholder {
-  <div class="skeleton"></div>
+<div class="skeleton"></div>
 }
 ```
 
@@ -410,29 +373,42 @@ await expect.poll(() => store.count()).toBe(7);
 ```html
 <!-- Enter animation: Angular applies "slide-in" class and waits for animation to end -->
 @if (isVisible()) {
-  <div animate.enter="slide-in">Entering content</div>
+<div animate.enter="slide-in">Entering content</div>
 }
 
 <!-- Leave animation: Angular applies "fade-out" class, waits, then removes from DOM -->
 @if (isVisible()) {
-  <div animate.leave="fade-out">Leaving content</div>
+<div animate.leave="fade-out">Leaving content</div>
 }
 ```
 
 ```css
 /* Define in component styles */
-.slide-in { animation: slide-fade 300ms ease-out; }
-@keyframes slide-fade {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
+.slide-in {
+  animation: slide-fade 300ms ease-out;
 }
-.fade-out { opacity: 0; transition: opacity 300ms ease-out; }
+@keyframes slide-fade {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.fade-out {
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+}
 
 /* Entry animation via @starting-style (no animate.enter needed) */
 .card {
   opacity: 1;
   transition: opacity 300ms;
-  @starting-style { opacity: 0; }
+  @starting-style {
+    opacity: 0;
+  }
 }
 ```
 
@@ -442,11 +418,11 @@ await expect.poll(() => store.count()).toBe(7);
 - Headless directives — provide structure, keyboard navigation, ARIA attrs, focus management. **You provide HTML + CSS.**
 - Style via ARIA attribute selectors: `[aria-expanded="true"]`, `[aria-selected="true"]`, `[aria-pressed="true"]`.
 
-| Category | Components |
-|----------|-----------|
-| **Search & selection** | `Autocomplete`, `Listbox`, `Select`, `Multiselect`, `Combobox` |
-| **Navigation & actions** | `Menu`, `Menubar`, `Toolbar` |
-| **Content organization** | `Accordion`, `Tabs`, `Tree`, `Grid` |
+| Category                 | Components                                                     |
+| ------------------------ | -------------------------------------------------------------- |
+| **Search & selection**   | `Autocomplete`, `Listbox`, `Select`, `Multiselect`, `Combobox` |
+| **Navigation & actions** | `Menu`, `Menubar`, `Toolbar`                                   |
+| **Content organization** | `Accordion`, `Tabs`, `Tree`, `Grid`                            |
 
 ```typescript
 // Example: Toolbar with keyboard navigation + screen reader support
@@ -485,24 +461,33 @@ import { Toolbar, ToolbarWidget, ToolbarWidgetGroup } from '@angular/aria/toolba
 
 ```typescript
 // app.config.ts
-provideRouter(routes, withViewTransitions())
+provideRouter(routes, withViewTransitions());
 
 // Optionally: skip transitions for same-page navigation
 withViewTransitions({
   onViewTransitionCreated: ({ transition }) => {
     const router = inject(Router);
     const targetUrl = router.currentNavigation()!.finalUrl!;
-    if (isActive(targetUrl, router, { paths: 'exact', matrixParams: 'exact', fragment: 'ignored', queryParams: 'ignored' })()) {
+    if (
+      isActive(targetUrl, router, {
+        paths: 'exact',
+        matrixParams: 'exact',
+        fragment: 'ignored',
+        queryParams: 'ignored',
+      })()
+    ) {
       transition.skipTransition();
     }
   },
-})
+});
 ```
 
 ```css
 /* global styles.scss */
 ::view-transition-old(hero-image),
-::view-transition-new(hero-image) { animation-duration: 300ms; }
+::view-transition-new(hero-image) {
+  animation-duration: 300ms;
+}
 ```
 
 ### Testing (Zoneless)
@@ -583,7 +568,7 @@ expect(res.value()).toEqual({ name: 'test' });
 
 ## Принципы проекта iOrder
 
-1. **Feature-Sliced Design** — `pages → widgets → features → entities → shared`
+1. **Domain-based structure** — `public / customer / supplier / admin` — изолированные домены с `pages/` внутри
 2. **Standalone components only** — никаких NgModules
 3. **Signals first** — Angular Signals вместо BehaviorSubject
 4. **New control flow** — `@if`, `@for`, `@switch`, `@defer`
@@ -598,6 +583,7 @@ expect(res.value()).toEqual({ name: 'test' });
 ## Контракты (КРИТИЧЕСКИ ВАЖНО)
 
 API контракты берутся из `@iorder/shared-contracts`:
+
 - `src/types/` — IProduct, IUser, IOrder, ApiResponse<T>, PaginatedResponse<T>
 - `src/schemas/` — Zod-схемы валидации
 - `src/endpoints/` — Request/Response контракты
@@ -605,15 +591,16 @@ API контракты берутся из `@iorder/shared-contracts`:
 - `src/events/` — EventTopics, Event payloads
 
 **Правила:**
+
 1. Всегда используй endpoint contracts для типизации HTTP-запросов
 2. Никогда не создавай локальные интерфейсы для request/response
 3. Новый эндпоинт → сначала контракт, потом использование
 
-## Shared UI компоненты (`ui/` или будущий `@iorder/shared-ui`)
+## Shared UI компоненты (`ui/`)
 
 - Стилизация через CSS custom properties (`--ui-primary-color`, `--ui-border-radius`)
-- Компоненты framework-agnostic (для совместимости с Ionic)
 - Никаких зависимостей от доменной логики
+- Используются всеми доменами (public, customer, supplier, admin)
 
 ## Proxy конфигурация
 
@@ -621,12 +608,13 @@ API контракты берутся из `@iorder/shared-contracts`:
 
 ## Браузер и отладка
 
-| Инструмент | Когда использовать |
-|---|---|
-| **Playwright** | Headless проверка UI, навигация, клики |
-| **Chrome DevTools** | Console errors, network, performance |
+| Инструмент          | Когда использовать                     |
+| ------------------- | -------------------------------------- |
+| **Playwright**      | Headless проверка UI, навигация, клики |
+| **Chrome DevTools** | Console errors, network, performance   |
 
 **Правила:**
+
 - После изменений — проверяй через Playwright что страница загружается без ошибок
 - Если найдены ошибки — исправь, не спрашивая пользователя
 - Сообщай только результат

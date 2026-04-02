@@ -11,6 +11,7 @@ Create a complete Feature-Sliced Design feature with component and store.
 ## Arguments
 
 Parse the arguments:
+
 - First argument: feature name (e.g., `product-catalog`, `order-checkout`, `cart`)
 - Second argument (optional): domain — `customer`, `supplier`, or `admin` (default: ask user)
 

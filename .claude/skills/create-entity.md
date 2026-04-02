@@ -11,6 +11,7 @@ Create a Feature-Sliced Design entity — a business object with types and optio
 ## Arguments
 
 Parse the arguments:
+
 - First argument: entity name (e.g., `product`, `order`, `user`, `cart-item`)
 - Second argument (optional): `with-store` — also create an entity store (default: types only)
 
@@ -107,7 +108,7 @@ export type { I{{PascalName}} } from './{{kebab-name}}.types';
 3. **Re-export from shared-contracts** when the interface exists there (DRY)
 4. Entity stores are typically `providedIn: 'root'` (global, shared across features)
 5. Use `withEntities<T>()` for collection management
-6. FSD: entities can import from shared and @iorder/* — NOT from features, widgets, or pages
+6. FSD: entities can import from shared and @iorder/\* — NOT from features, widgets, or pages
 7. Create `frontend/web/src/app/entities/` directory if it doesn't exist
 
 ## After Creation

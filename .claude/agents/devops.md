@@ -36,14 +36,15 @@ You are a Senior DevOps Engineer and Infrastructure Architect with deep expertis
 
 ### Dockerfiles (4 файла в `infrastructure/docker/`)
 
-| Файл | Назначение |
-|------|-----------|
-| `Dockerfile.microservice` | Shared multi-stage build для всех сервисов (ARG SERVICE) |
-| `Dockerfile.frontend` | Nginx + pre-built Angular (ожидает `dist/web/browser/`) |
-| `Dockerfile.frontend-full` | 3-stage: deps → build → nginx (полный билд внутри Docker) |
-| `Dockerfile.e2e` | Playwright test runner (mcr.microsoft.com/playwright:v1.52.0-noble) |
+| Файл                       | Назначение                                                          |
+| -------------------------- | ------------------------------------------------------------------- |
+| `Dockerfile.microservice`  | Shared multi-stage build для всех сервисов (ARG SERVICE)            |
+| `Dockerfile.frontend`      | Nginx + pre-built Angular (ожидает `dist/web/browser/`)             |
+| `Dockerfile.frontend-full` | 3-stage: deps → build → nginx (полный билд внутри Docker)           |
+| `Dockerfile.e2e`           | Playwright test runner (mcr.microsoft.com/playwright:v1.52.0-noble) |
 
 **Microservice Dockerfile паттерн:**
+
 ```dockerfile
 FROM oven/bun:1.1-alpine AS build
 COPY . .
@@ -57,14 +58,15 @@ ENTRYPOINT ["sh", "-c", "cd /app/microservices/${SERVICE} && bun run src/index.t
 
 ### Docker Compose файлы
 
-| Файл | Сервисы | Назначение |
-|------|---------|-----------|
-| `docker-compose.yml` | RedPanda, Console | Только message broker |
-| `docker-compose.db.yml` | PostgreSQL (WAL) | Standalone DB |
-| `docker-compose.dev.yml` | DB + RedPanda + Console + api-gateway + products + auth + frontend | Полный dev стек |
-| `docker-compose.test.yml` | DB (tmpfs) + db-migrate + сервисы + frontend + e2e runner | E2E testing |
+| Файл                      | Сервисы                                                            | Назначение            |
+| ------------------------- | ------------------------------------------------------------------ | --------------------- |
+| `docker-compose.yml`      | RedPanda, Console                                                  | Только message broker |
+| `docker-compose.db.yml`   | PostgreSQL (WAL)                                                   | Standalone DB         |
+| `docker-compose.dev.yml`  | DB + RedPanda + Console + api-gateway + products + auth + frontend | Полный dev стек       |
+| `docker-compose.test.yml` | DB (tmpfs) + db-migrate + сервисы + frontend + e2e runner          | E2E testing           |
 
 **Порты:**
+
 - PostgreSQL: 5432
 - API Gateway: 3000
 - Products Service: 3001
@@ -74,6 +76,7 @@ ENTRYPOINT ["sh", "-c", "cd /app/microservices/${SERVICE} && bun run src/index.t
 - RedPanda Console: 8080
 
 ### Nginx конфигурация (`nginx-frontend.conf`)
+
 - `/api/*` → proxy_pass к API Gateway
 - SPA routing: все пути → `index.html`
 - Gzip compression enabled
@@ -87,14 +90,15 @@ ENTRYPOINT ["sh", "-c", "cd /app/microservices/${SERVICE} && bun run src/index.t
 
 **Values files per environment:**
 
-| File | Purpose |
-|------|---------|
-| `values.yaml` | Production defaults (3 replicas, real resources, HPA) |
-| `values-dev.yaml` | Minikube/local (1-2 replicas, minimal resources, imagePullPolicy: Never) |
-| `values-staging.yaml` | Staging (2 replicas, moderate resources) |
-| `values-prod.yaml` | Production overrides (specific tags, domain, TLS) |
+| File                  | Purpose                                                                  |
+| --------------------- | ------------------------------------------------------------------------ |
+| `values.yaml`         | Production defaults (3 replicas, real resources, HPA)                    |
+| `values-dev.yaml`     | Minikube/local (1-2 replicas, minimal resources, imagePullPolicy: Never) |
+| `values-staging.yaml` | Staging (2 replicas, moderate resources)                                 |
+| `values-prod.yaml`    | Production overrides (specific tags, domain, TLS)                        |
 
 **Template structure:**
+
 ```
 templates/
 ├── _helpers.tpl, configmap.yaml, secrets.yaml, ingress.yaml
@@ -111,11 +115,13 @@ templates/
 ```
 
 **Health checks (все сервисы):**
+
 - startupProbe: 5s intervals, 30 retries (150s timeout)
 - readinessProbe: 10s intervals, 3 retries
 - livenessProbe: 20s intervals, 3 retries
 
 **Network Policies (toggleable):**
+
 ```
 Internet → Ingress → API Gateway (3000)
                      → Products Service (3001) [only from Gateway]
@@ -125,6 +131,7 @@ Internet → Ingress → API Gateway (3000)
 ```
 
 **Database migration Helm hook:**
+
 - Runs as pre-install/post-upgrade Job
 - Commands: `prisma migrate deploy` + `seed.ts`
 - Auto-delete after success
@@ -145,6 +152,7 @@ Internet → Ingress → API Gateway (3000)
 ### RedPanda Topics (`create-topics.sh`)
 
 Topics (3 partitions, 1 replica each):
+
 - `user.registered`, `user.logged_in`
 - `order.created`, `order.status_changed`, `order.cancelled`
 - `payment.initiated`, `payment.completed`, `payment.failed`

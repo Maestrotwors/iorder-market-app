@@ -11,6 +11,7 @@ Create a new ElysiaJS microservice following the established patterns of the iOr
 ## Arguments
 
 The user provides the service name and optionally a description. Parse the arguments:
+
 - First argument: service name (e.g., `orders-service`, `notifications-service`, `payments-service`)
 - Second argument (optional): brief description of what the service does
 
@@ -28,6 +29,7 @@ The user provides the service name and optionally a description. Parse the argum
 ## Service Template
 
 ### Directory Structure
+
 ```
 microservices/<service-name>/
 ├── src/
@@ -40,6 +42,7 @@ microservices/<service-name>/
 ```
 
 ### Entry Point (`src/index.ts`)
+
 ```typescript
 import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
@@ -65,13 +68,16 @@ export type App = typeof app;
 ```
 
 ### Metrics Plugin (`src/metrics.ts`)
+
 Copy the pattern from `microservices/products-service/src/metrics.ts`:
+
 - `http_requests_total` counter
 - `http_request_duration_seconds` histogram
 - `/metrics` endpoint
 - Exclude `/metrics` and `/health` from tracking
 
 ### package.json
+
 ```json
 {
   "name": "<service-name>",
@@ -85,6 +91,7 @@ Copy the pattern from `microservices/products-service/src/metrics.ts`:
 ```
 
 ### tsconfig.json
+
 ```json
 {
   "extends": "../../tsconfig.base.json",

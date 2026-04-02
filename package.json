@@ -1,0 +1,31 @@
+{
+  "name": "iorder-market-app",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.1.45",
+  "workspaces": [
+    "frontend/web",
+    "microservices/*"
+  ],
+  "scripts": {
+    "start:frontend": "bun run --cwd frontend/web start",
+    "start:backend": "bun run --cwd microservices/iorder-main dev",
+    "start:all": "bun run start:frontend & bun run start:backend",
+    "test:frontend": "bun run --cwd frontend/web test",
+    "test:backend": "bun run --cwd microservices/iorder-main test",
+    "lint": "eslint .",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "knip": "knip",
+    "check:all": "bun run format:check && bun run lint && bun run knip && bun run test:frontend && bun run test:backend"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.1.0",
+    "knip": "^6.2.0",
+    "prettier": "^3.8.1",
+    "typescript": "^6.0.2",
+    "typescript-eslint": "^8.58.0"
+  }
+}

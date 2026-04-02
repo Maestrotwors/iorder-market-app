@@ -11,6 +11,7 @@ Create a new Angular 21 single-file standalone component.
 ## Arguments
 
 The user provides the component name and optionally the path. Parse the arguments:
+
 - First argument: component name (e.g., `product-card`, `order-list`)
 - Second argument (optional): path relative to `frontend/web/src/app/` (e.g., `domains/customer/catalog`)
 
@@ -19,6 +20,7 @@ If no path is provided, ask the user where to place the component.
 ## Rules (STRICTLY FOLLOW)
 
 Every component MUST be:
+
 1. **Single-file** — template, styles, and logic in ONE `.ts` file (inline `template` and `styles`)
 2. **Standalone** — standalone is the default in Angular 21+. **NEVER set `standalone: true` explicitly** — it's redundant
 3. **OnPush** — `changeDetection: ChangeDetectionStrategy.OnPush`

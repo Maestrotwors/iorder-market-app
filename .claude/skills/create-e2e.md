@@ -11,6 +11,7 @@ Create a Playwright E2E test file following the project conventions.
 ## Arguments
 
 Parse the arguments:
+
 - First argument: test target (e.g., `orders`, `cart`, `product-detail`)
 - Second argument (optional): `api` or `browser` (default: `api`)
 
