@@ -227,6 +227,7 @@ bun run k8s:forward            # Port-forward
 ```
 
 ## Агенты
+- `/mentor` — Ментор-эксперт: объясняет решения, ищет в документации, проверяет в браузере, НЕ правит файлы
 - `/frontend` — Angular приложение, shared UI, FSD архитектура
 - `/backend` — ElysiaJS микросервисы, API Gateway, Better Auth, SSE/WS
 - `/database` — Prisma, миграции, PostgreSQL, WAL/CDC

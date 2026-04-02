@@ -19,11 +19,7 @@ node_modules
 .env
 .env.*
 !.env.example
-
-# Docker (keep nginx.conf accessible for frontend build)
-infrastructure/helm
-infrastructure/ci-cd
-
+ 
 # Tests
 **/*.spec.ts
 **/*.test.ts

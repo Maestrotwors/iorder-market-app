@@ -23,25 +23,18 @@ Thumbs.db
 .env.docker
 .env.test
 .env.local
-.env.*.local
-
-# Generated Helm values
-infrastructure/helm/iorder/values-ports.yaml
+.env.*.local 
 
 # MCP (contains API keys)
 .mcp.json
 
-# Prisma
-database/prisma/*.db
-
+ 
 # Nx
 .nx/
 
 # Angular
 .angular/
-
-# Docker
-infrastructure/docker/volumes/
+ 
 
 # Logs
 *.log
@@ -50,9 +43,4 @@ npm-debug.log*
 # Coverage
 coverage/
 
-# Playwright
-e2e/playwright-report/
-e2e/test-results/
-e2e/blob-report/
-playwright-report/
-test-results/
+ 

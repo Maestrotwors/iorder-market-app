@@ -1,8 +1,0 @@
-{
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "outDir": "../../dist/packages/shared-contracts",
-    "declaration": true
-  },
-  "include": ["src/**/*.ts"]
-}
