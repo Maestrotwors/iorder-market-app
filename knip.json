@@ -3,9 +3,7 @@
   "workspaces": {
     "frontend/web": {
       "project": ["src/**/*.ts"],
-      "ignore": ["src/test-setup.ts"],
-      "ignoreDependencies": ["@analogjs/vitest-angular", "@angular/forms"],
-      "vitest": false
+      "ignoreDependencies": ["@angular/forms"]
     },
     "microservices/iorder-main": {
       "project": ["src/**/*.ts"]

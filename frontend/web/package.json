@@ -6,8 +6,8 @@
     "start": "bun ng serve",
     "build": "bun ng build",
     "watch": "bun ng build --watch --configuration development",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "bun test",
+    "test:watch": "bun test --watch"
   },
   "private": true,
   "packageManager": "bun@1.1.45",
@@ -22,7 +22,6 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@analogjs/vitest-angular": "^2.4.0",
     "@angular/build": "^21.2.6",
     "@angular/cli": "^21.2.6",
     "@angular/compiler-cli": "^21.2.0",
