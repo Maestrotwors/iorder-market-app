@@ -6,7 +6,8 @@
       "ignoreDependencies": ["@angular/forms"]
     },
     "microservices/iorder-main": {
-      "project": ["src/**/*.ts"]
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": []
     }
   }
 }

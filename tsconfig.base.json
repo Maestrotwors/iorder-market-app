@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "moduleResolution": "bundler",
+    "paths": {
+      "@iorder/config": ["./libs/config/index.ts"]
+    }
+  }
+}
